@@ -328,7 +328,7 @@ async def _run_ocr(image_b64: str) -> dict[str, Any]:
     try:
         async with httpx.AsyncClient(timeout=180) as client:
             resp = await client.post(
-                f"{settings.ollama_url}/api/generate",
+                "http://127.0.0.1:11434/api/generate",
                 json={
                     "model": "minicpm-v:8b",
                     "prompt": OCR_INVOICE_PROMPT,
