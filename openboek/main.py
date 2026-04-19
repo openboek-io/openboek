@@ -95,6 +95,7 @@ from openboek.tax.routes import router as tax_router
 from openboek.verification.routes import router as verification_router
 from openboek.scanner.routes import router as scanner_router
 from openboek.wizard.routes import router as wizard_router
+from openboek.documents.routes import router as documents_router
 from openboek.tasks.routes import router as tasks_router
 
 app.include_router(auth_router)
@@ -111,6 +112,7 @@ app.include_router(verification_router)
 app.include_router(scanner_router)
 app.include_router(wizard_router)
 app.include_router(tasks_router)
+app.include_router(documents_router)
 
 
 # ---------------------------------------------------------------------------

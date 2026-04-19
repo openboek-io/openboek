@@ -113,6 +113,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="/entities/{{ entity.id }}/upload" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/upload' in request.url.path and '/upload/file' not in request.url.path %}nav-active{% endif %}">
+                                <span class="text-base">📤</span> Bulk Upload
+                            </a>
+                        </li>
+                        <li>
                             <a href="/entities/{{ entity.id }}/accounts" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/accounts' in request.url.path %}nav-active{% endif %}">
                                 <span class="text-base">📋</span> {{ t('nav.accounting') }}
                             </a>
@@ -209,6 +214,7 @@
                         <li><a href="/entities/{{ entity.id }}/invoices" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>🧾</span> {{ t('nav.invoices') }}</a></li>
                         <li><a href="/entities/{{ entity.id }}/banking" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>🏦</span> {{ t('nav.banking') }}</a></li>
                         <li><a href="/entities/{{ entity.id }}/scanner" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>📸</span> {{ t('nav.scanner') }}</a></li>
+                        <li><a href="/entities/{{ entity.id }}/upload" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>📤</span> Bulk Upload</a></li>
                         <li><a href="/entities/{{ entity.id }}/accounts" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>📋</span> {{ t('nav.accounting') }}</a></li>
                         <li><a href="/entities/{{ entity.id }}/reports/trial-balance" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>📈</span> {{ t('nav.reports') }}</a></li>
                         <li><a href="/entities/{{ entity.id }}/tax/optimizer" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>💰</span> {{ t('nav.tax') }}</a></li>

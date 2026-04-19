@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}📄 Document — OpenBoek{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="px-4 md:px-8 pt-4 text-sm">
+    <ol class="flex items-center gap-2 text-gray-500">
+        <li><a href="/dashboard" class="hover:text-white transition">Home</a></li>
+        <li>/</li>
+        {% if entity is defined and entity %}
+        <li><a href="/entities/{{ entity.id }}" class="hover:text-white transition">{{ entity.name }}</a></li>
+        <li>/</li>
+        <li><a href="/entities/{{ entity.id }}/upload" class="hover:text-white transition">Upload</a></li>
+        <li>/</li>
+        {% endif %}
+        <li class="text-gray-300">Document</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+    {# Success message #}
+    {% if request.query_params.get('success') %}
+    <div class="bg-green-900/30 border border-green-700/30 rounded-lg px-4 py-3 mb-6 text-green-400 text-sm">
+        ✅ {{ request.query_params.get('success') }}
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {# ===== LEFT: Document Preview ===== #}
+        <div class="bg-gray-900 border border-gray-700 rounded-xl p-6">
+            <h2 class="text-lg font-semibold text-white mb-4">
+                {% if doc.source == 'bank' %}🏦 Banktransactie{% else %}📄 Document{% endif %}
+            </h2>
+
+            {# File preview for scans #}
+            {% if doc.storage_path %}
+            <div class="mb-4 bg-gray-800 rounded-lg overflow-hidden">
+                {% set mime = doc.mime_type or '' %}
+                {% if 'image' in mime or doc.storage_path.endswith(('.jpg','.jpeg','.png','.gif','.webp')) %}
+                <img src="/entities/{{ entity.id }}/upload/file/{{ doc.id }}"
+                     class="w-full max-h-96 object-contain" alt="Document preview" />
+                {% elif 'pdf' in mime or doc.storage_path.endswith('.pdf') %}
+                <div class="p-8 text-center">
+                    <div class="text-4xl mb-2">📄</div>
+                    <a href="/entities/{{ entity.id }}/upload/file/{{ doc.id }}"
+                       target="_blank" class="text-green-400 hover:text-green-300 text-sm">
+                        PDF openen in nieuw tabblad →
+                    </a>
+                </div>
+                {% else %}
+                <div class="p-8 text-center text-gray-500">
+                    <div class="text-4xl mb-2">📎</div>
+                    <p>{{ doc.original_filename or 'Bestand' }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {# OCR extracted data #}
+            {% if ocr %}
+            <div class="space-y-2 text-sm">
+                <h3 class="text-gray-400 font-medium mb-2">Geëxtraheerde data (OCR)</h3>
+                {% for key, val in ocr.items() %}
+                {% if val and key not in ('error', 'raw_text', 'line_items', 'btw_amounts') %}
+                <div class="flex justify-between border-b border-gray-800 py-1">
+                    <span class="text-gray-500">{{ key }}</span>
+                    <span class="text-gray-300 text-right max-w-[60%] truncate">{{ val }}</span>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {# Bank transaction details #}
+            {% if doc.source == 'bank' %}
+            <div class="space-y-2 text-sm mt-4">
+                {% if doc.counterparty_iban %}
+                <div class="flex justify-between border-b border-gray-800 py-1">
+                    <span class="text-gray-500">IBAN</span>
+                    <span class="text-gray-300 font-mono">{{ doc.counterparty_iban }}</span>
+                </div>
+                {% endif %}
+                {% if doc.description %}
+                <div class="flex justify-between border-b border-gray-800 py-1">
+                    <span class="text-gray-500">Omschrijving</span>
+                    <span class="text-gray-300 text-right max-w-[60%]">{{ doc.description }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {# Current status #}
+            <div class="mt-6 p-4 rounded-lg
+                {% if doc.review_status == 'auto_processed' or doc.review_status == 'reviewed' %}bg-green-900/20 border border-green-800/30
+                {% elif doc.review_status == 'needs_review' %}bg-orange-900/20 border border-orange-800/30
+                {% elif doc.review_status == 'failed' %}bg-red-900/20 border border-red-800/30
+                {% else %}bg-gray-800{% endif %}">
+                <div class="flex items-center gap-2 text-sm">
+                    <span>
+                        {% if doc.review_status == 'auto_processed' %}✅ Automatisch verwerkt
+                        {% elif doc.review_status == 'reviewed' %}✅ Gecontroleerd
+                        {% elif doc.review_status == 'needs_review' %}⚠️ Aandacht nodig
+                        {% elif doc.review_status == 'failed' %}❌ Verwerking mislukt
+                        {% elif doc.review_status == 'pending' %}⏳ Wordt verwerkt...
+                        {% else %}{{ doc.review_status }}{% endif %}
+                    </span>
+                    {% if doc.ai_confidence %}
+                    <span class="text-gray-500 ml-auto">AI zekerheid: {{ (doc.ai_confidence * 100)|int }}%</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# ===== RIGHT: Correction Form ===== #}
+        <div class="bg-gray-900 border border-gray-700 rounded-xl p-6">
+            <h2 class="text-lg font-semibold text-white mb-4">✏️ Corrigeren</h2>
+
+            <form method="post" action="/entities/{{ entity.id }}/upload/doc/{{ doc.id }}/correct"
+                  class="space-y-4">
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Tegenpartij / Leverancier</label>
+                    <input type="text" name="vendor_name" value="{{ doc.vendor_name or '' }}"
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Categorie</label>
+                    <select name="category"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500">
+                        {% for cat in ['business_expense', 'sales_income', 'purchase_invoice', 'salary', 'tax_payment', 'loan', 'personal', 'other'] %}
+                        <option value="{{ cat }}" {% if doc.category == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Bedrag incl. BTW</label>
+                        <input type="number" step="0.01" name="amount" value="{{ doc.amount or '' }}"
+                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500" />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Bedrag excl. BTW</label>
+                        <input type="number" step="0.01" name="amount_excl" value="{{ doc.amount_excl or '' }}"
+                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">BTW bedrag</label>
+                        <input type="number" step="0.01" name="btw_amount" value="{{ doc.btw_amount or '' }}"
+                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500" />
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Datum</label>
+                        <input type="date" name="transaction_date"
+                               value="{{ doc.transaction_date.strftime('%Y-%m-%d') if doc.transaction_date else '' }}"
+                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Grootboekrekening</label>
+                    <select name="account_id"
+                            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500">
+                        <option value="">— Automatisch —</option>
+                        {% for acc in accounts %}
+                        <option value="{{ acc.id }}" {% if doc.account_id and doc.account_id|string == acc.id|string %}selected{% endif %}>
+                            {{ acc.code }} — {{ acc.name_nl }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Notities</label>
+                    <textarea name="notes" rows="2"
+                              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500">{{ doc.notes or '' }}</textarea>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit"
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-4 rounded-lg transition">
+                        💾 Opslaan & journaalpost bijwerken
+                    </button>
+                </div>
+            </form>
+
+            {% if doc.journal_entry_id %}
+            <div class="mt-4 pt-4 border-t border-gray-700">
+                <a href="/entities/{{ entity.id }}/journal/{{ doc.journal_entry_id }}"
+                   class="text-green-400 hover:text-green-300 text-sm">
+                    📖 Bekijk journaalpost →
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

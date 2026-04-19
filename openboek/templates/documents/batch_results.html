@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}📦 Batch resultaten — OpenBoek{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="px-4 md:px-8 pt-4 text-sm">
+    <ol class="flex items-center gap-2 text-gray-500">
+        <li><a href="/dashboard" class="hover:text-white transition">Home</a></li>
+        <li>/</li>
+        {% if entity is defined and entity %}
+        <li><a href="/entities/{{ entity.id }}" class="hover:text-white transition">{{ entity.name }}</a></li>
+        <li>/</li>
+        <li><a href="/entities/{{ entity.id }}/upload" class="hover:text-white transition">Upload</a></li>
+        <li>/</li>
+        {% endif %}
+        <li class="text-gray-300">Resultaten</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+    {# ===== SUMMARY CARDS ===== #}
+    <div class="flex flex-wrap gap-4 mb-8">
+        <div class="flex-1 min-w-[200px] bg-gray-900 border border-gray-700 rounded-xl p-5">
+            <div class="text-3xl font-bold text-white">{{ summary.total or 0 }}</div>
+            <div class="text-sm text-gray-400 mt-1">Totaal documenten</div>
+        </div>
+        <div class="flex-1 min-w-[200px] bg-gray-900 border border-green-800/30 rounded-xl p-5">
+            <div class="text-3xl font-bold text-green-400">{{ summary.auto_ok or 0 }}</div>
+            <div class="text-sm text-gray-400 mt-1">✅ Automatisch verwerkt</div>
+        </div>
+        {% if summary.needs_review %}
+        <div class="flex-1 min-w-[200px] bg-gray-900 border border-orange-800/30 rounded-xl p-5">
+            <div class="text-3xl font-bold text-orange-400">{{ summary.needs_review }}</div>
+            <div class="text-sm text-gray-400 mt-1">⚠️ Aandacht nodig</div>
+        </div>
+        {% endif %}
+        {% if summary.failed %}
+        <div class="flex-1 min-w-[200px] bg-gray-900 border border-red-800/30 rounded-xl p-5">
+            <div class="text-3xl font-bold text-red-400">{{ summary.failed }}</div>
+            <div class="text-sm text-gray-400 mt-1">❌ Mislukt</div>
+        </div>
+        {% endif %}
+        {% if summary.pending %}
+        <div class="flex-1 min-w-[200px] bg-gray-900 border border-gray-700 rounded-xl p-5"
+             hx-get="/entities/{{ entity.id }}/upload/batch/{{ batch_id }}/status"
+             hx-trigger="every 5s"
+             hx-target="#pending-counter"
+             hx-swap="innerHTML">
+            <div class="text-3xl font-bold text-gray-400" id="pending-counter">⏳ {{ summary.pending }}</div>
+            <div class="text-sm text-gray-400 mt-1">Wordt verwerkt...</div>
+        </div>
+        {% endif %}
+    </div>
+
+    {# ===== FINANCIAL SUMMARY ===== #}
+    {% if summary.date_from %}
+    <div class="bg-gray-900 border border-gray-700 rounded-xl p-5 mb-8">
+        <div class="flex flex-wrap gap-6 text-sm">
+            <div>
+                <span class="text-gray-500">Periode:</span>
+                <span class="text-white ml-1">
+                    {{ summary.date_from.strftime('%d %b %Y') if summary.date_from else '—' }}
+                    — {{ summary.date_to.strftime('%d %b %Y') if summary.date_to else '—' }}
+                </span>
+            </div>
+            {% if summary.total_income %}
+            <div>
+                <span class="text-gray-500">Inkomsten:</span>
+                <span class="text-green-400 ml-1">€ {{ "%.2f"|format(summary.total_income|float) }}</span>
+            </div>
+            {% endif %}
+            {% if summary.total_expense %}
+            <div>
+                <span class="text-gray-500">Uitgaven:</span>
+                <span class="text-red-400 ml-1">€ {{ "%.2f"|format(summary.total_expense|float) }}</span>
+            </div>
+            {% endif %}
+            <div>
+                <span class="text-gray-500">Bronnen:</span>
+                {% if summary.scan_count %}<span class="text-gray-300 ml-1">📄 {{ summary.scan_count }} scans</span>{% endif %}
+                {% if summary.bank_count %}<span class="text-gray-300 ml-1">🏦 {{ summary.bank_count }} banktransacties</span>{% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# ===== TIMELINE BY MONTH ===== #}
+    {% for month_key, month_docs in months.items() %}
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+            📅 {{ month_key }}
+            <span class="text-sm text-gray-500 font-normal">({{ month_docs|length }} items)</span>
+        </h2>
+
+        <div class="space-y-2">
+            {% for doc in month_docs %}
+            <a href="/entities/{{ entity.id }}/upload/doc/{{ doc.id }}"
+               class="block bg-gray-900 border rounded-lg px-4 py-3 hover:border-green-500/30 transition
+                      {% if doc.review_status == 'auto_processed' or doc.review_status == 'reviewed' %}border-gray-700
+                      {% elif doc.review_status == 'needs_review' %}border-orange-700/40
+                      {% elif doc.review_status == 'failed' %}border-red-700/40
+                      {% else %}border-gray-700{% endif %}">
+                <div class="flex items-center gap-3">
+                    {# Status icon #}
+                    <span class="text-lg flex-shrink-0">
+                        {% if doc.review_status == 'auto_processed' or doc.review_status == 'reviewed' %}✅
+                        {% elif doc.review_status == 'needs_review' %}⚠️
+                        {% elif doc.review_status == 'failed' %}❌
+                        {% elif doc.review_status == 'pending' %}⏳
+                        {% else %}📄{% endif %}
+                    </span>
+
+                    {# Source icon #}
+                    <span class="text-sm flex-shrink-0">
+                        {% if doc.source == 'bank' %}🏦{% else %}📄{% endif %}
+                    </span>
+
+                    {# Main info #}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-white font-medium truncate">
+                                {{ doc.vendor_name or doc.original_filename or '—' }}
+                            </span>
+                            {% if doc.category %}
+                            <span class="text-xs px-2 py-0.5 rounded-full
+                                {% if doc.category == 'sales_income' %}bg-green-900/50 text-green-400
+                                {% elif doc.category == 'business_expense' or doc.category == 'purchase_invoice' %}bg-red-900/50 text-red-400
+                                {% elif doc.category == 'personal' %}bg-purple-900/50 text-purple-400
+                                {% else %}bg-gray-800 text-gray-400{% endif %}">
+                                {{ doc.category }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% if doc.description %}
+                        <div class="text-xs text-gray-500 truncate mt-0.5">{{ doc.description[:80] }}</div>
+                        {% endif %}
+                    </div>
+
+                    {# Amount #}
+                    <div class="text-right flex-shrink-0">
+                        {% if doc.amount %}
+                        <span class="font-mono text-sm
+                            {% if doc.amount > 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                            € {{ "%.2f"|format(doc.amount|float) }}
+                        </span>
+                        {% endif %}
+                        {% if doc.transaction_date %}
+                        <div class="text-xs text-gray-500">
+                            {{ doc.transaction_date.strftime('%d %b') if doc.transaction_date else '' }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <span class="text-gray-600">→</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if not months %}
+    <div class="text-center py-12 text-gray-500">
+        <div class="text-4xl mb-3">📭</div>
+        <p>Geen documenten in deze batch</p>
+    </div>
+    {% endif %}
+
+    {# ===== ACTIONS ===== #}
+    <div class="flex gap-3 mt-8 mb-4">
+        <a href="/entities/{{ entity.id }}/upload"
+           class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition">
+            📤 Meer uploaden
+        </a>
+        <a href="/entities/{{ entity.id }}/journal"
+           class="bg-gray-700 hover:bg-gray-600 text-gray-300 py-2 px-6 rounded-lg transition">
+            📖 Naar journaal
+        </a>
+    </div>
+</div>
+{% endblock %}

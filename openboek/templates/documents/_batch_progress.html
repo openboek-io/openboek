@@ -1,0 +1,43 @@
+{# HTMX partial: batch processing progress indicator #}
+<div class="bg-gray-900 border border-gray-700 rounded-xl p-6"
+     {% if summary.pending and summary.pending > 0 %}
+     hx-get="/entities/{{ entity.id }}/upload/batch/{{ batch_id }}/status"
+     hx-trigger="every 3s"
+     hx-swap="outerHTML"
+     {% endif %}>
+
+    {% set total = summary.total or 0 %}
+    {% set done = (summary.auto_ok or 0) + (summary.needs_review or 0) + (summary.failed or 0) %}
+    {% set pct = (done * 100 / total) if total > 0 else 0 %}
+
+    <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+            {% if summary.pending and summary.pending > 0 %}
+            <div class="animate-spin text-xl">⚙️</div>
+            <span class="text-white font-medium">Verwerken... {{ done }}/{{ total }}</span>
+            {% else %}
+            <span class="text-xl">✅</span>
+            <span class="text-white font-medium">Klaar!</span>
+            {% endif %}
+        </div>
+
+        <div class="flex gap-3 text-sm">
+            {% if summary.auto_ok %}<span class="text-green-400">✅ {{ summary.auto_ok }}</span>{% endif %}
+            {% if summary.needs_review %}<span class="text-orange-400">⚠️ {{ summary.needs_review }}</span>{% endif %}
+            {% if summary.failed %}<span class="text-red-400">❌ {{ summary.failed }}</span>{% endif %}
+            {% if summary.pending %}<span class="text-gray-400">⏳ {{ summary.pending }}</span>{% endif %}
+        </div>
+    </div>
+
+    {# Progress bar #}
+    <div class="w-full bg-gray-800 rounded-full h-2.5">
+        <div class="bg-green-500 h-2.5 rounded-full transition-all duration-500" style="width: {{ pct|int }}%"></div>
+    </div>
+
+    {% if not summary.pending or summary.pending == 0 %}
+    <a href="/entities/{{ entity.id }}/upload/batch/{{ batch_id }}"
+       class="inline-block mt-4 text-green-400 hover:text-green-300 text-sm font-medium">
+        📦 Bekijk alle resultaten →
+    </a>
+    {% endif %}
+</div>

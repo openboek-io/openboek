@@ -173,3 +173,44 @@ async def handle_ai_insights(payload: dict[str, Any]) -> None:
         await session.commit()
 
     logger.info("Generated %d insights for entity=%s", len(insights), entity_id)
+
+
+# ---------------------------------------------------------------------------
+# Document processing handler (new bulk upload pipeline)
+# ---------------------------------------------------------------------------
+
+@register("process_document")
+async def handle_process_document(payload: dict[str, Any]) -> None:
+    """Process a single uploaded document — OCR + categorize + create journal entry.
+
+    Expected payload:
+        - doc_id: str — UUID of the documents row
+        - file_path: str — path to file on disk
+        - entity_id: str — entity UUID
+        - entity_name: str — entity name (for direction detection)
+        - entity_kvk: str | None — entity KVK number
+    """
+    from openboek.db import async_session_factory
+    from openboek.documents.service import process_scan_document
+
+    doc_id = payload.get("doc_id")
+    file_path = payload.get("file_path")
+    entity_id = payload.get("entity_id")
+    entity_name = payload.get("entity_name", "")
+    entity_kvk = payload.get("entity_kvk")
+
+    if not doc_id or not file_path or not entity_id:
+        raise ValueError("process_document requires doc_id, file_path, entity_id")
+
+    logger.info("Processing document %s (%s)", doc_id, file_path)
+
+    async with async_session_factory() as session:
+        result = await process_scan_document(
+            session, doc_id, file_path, entity_id,
+            entity_name=entity_name, entity_kvk=entity_kvk,
+        )
+        await session.commit()
+
+    logger.info("Document %s processed: %s", doc_id, result.get("status"))
+    if result.get("status") == "failed":
+        raise RuntimeError(f"Document processing failed: {result.get('error')}")

@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}📤 Bulk Upload — OpenBoek{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="px-4 md:px-8 pt-4 text-sm">
+    <ol class="flex items-center gap-2 text-gray-500">
+        <li><a href="/dashboard" class="hover:text-white transition">Home</a></li>
+        <li>/</li>
+        {% if entity is defined and entity %}
+        <li><a href="/entities/{{ entity.id }}" class="hover:text-white transition">{{ entity.name }}</a></li>
+        <li>/</li>
+        {% endif %}
+        <li class="text-gray-300">Upload</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold text-green-400 mb-2">📤 Bulk Upload</h1>
+    <p class="text-gray-400 mb-6">Upload facturen, bonnetjes, bankafschriften — alles wordt automatisch verwerkt.</p>
+
+    {# ===== DRAG & DROP ZONE ===== #}
+    <div id="drop-zone"
+         class="relative border-2 border-dashed border-gray-600 rounded-xl p-8 md:p-12 text-center
+                bg-gray-900/50 hover:border-green-500/50 hover:bg-gray-900 transition-all duration-300 cursor-pointer"
+         onclick="document.getElementById('file-input').click()">
+
+        <div id="drop-idle" class="space-y-3">
+            <div class="text-5xl">📁</div>
+            <p class="text-lg text-gray-300 font-medium">Sleep bestanden hierheen</p>
+            <p class="text-sm text-gray-500">of klik om te selecteren</p>
+            <p class="text-xs text-gray-600 mt-2">PDF, JPG, PNG, CSV (ING), MT940 — tot 100 bestanden tegelijk</p>
+        </div>
+
+        <div id="drop-active" class="hidden space-y-3">
+            <div class="text-5xl animate-bounce">⬇️</div>
+            <p class="text-lg text-green-400 font-medium">Laat los om te uploaden</p>
+        </div>
+
+        <input type="file" id="file-input" multiple class="hidden"
+               accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.tiff,.bmp,.heic,.csv,.sta,.mt940,.swi,.txt" />
+    </div>
+
+    {# ===== FILE LIST (pre-upload) ===== #}
+    <div id="file-list" class="hidden mt-6">
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-semibold text-white" id="file-count">0 bestanden geselecteerd</h2>
+            <div class="flex gap-2">
+                <button onclick="clearFiles()" class="text-sm text-gray-400 hover:text-red-400 transition">✕ Wissen</button>
+                <button onclick="startUpload()" id="upload-btn"
+                        class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition">
+                    🚀 Verwerken
+                </button>
+            </div>
+        </div>
+        <div id="file-items" class="space-y-2 max-h-64 overflow-y-auto"></div>
+    </div>
+
+    {# ===== UPLOAD PROGRESS ===== #}
+    <div id="upload-progress" class="hidden mt-6">
+        <div class="bg-gray-900 border border-gray-700 rounded-xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="animate-spin text-2xl">⏳</div>
+                <div>
+                    <h2 class="text-lg font-semibold text-white">Uploading...</h2>
+                    <p class="text-sm text-gray-400" id="upload-status-text">Bestanden worden verzonden</p>
+                </div>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-3">
+                <div id="upload-bar" class="bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    {# ===== PROCESSING STATUS (appears after upload, polls for completion) ===== #}
+    <div id="processing-status" class="hidden mt-6">
+        <div id="batch-progress-container"
+             hx-trigger="load delay:2s"
+             hx-swap="innerHTML">
+        </div>
+    </div>
+
+    {# ===== RECENT BATCHES ===== #}
+    {% if batches %}
+    <div class="mt-10">
+        <h2 class="text-lg font-semibold text-white mb-4">📦 Recente uploads</h2>
+        <div class="space-y-3">
+            {% for b in batches %}
+            <a href="/entities/{{ entity.id }}/upload/batch/{{ b.batch_id }}"
+               class="block bg-gray-900 border border-gray-700 rounded-lg p-4 hover:border-green-500/30 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-sm text-gray-400">{{ b.started.strftime('%d %b %Y, %H:%M') if b.started else '—' }}</span>
+                        <span class="text-white font-medium ml-3">{{ b.total }} bestanden</span>
+                    </div>
+                    <div class="flex gap-3 text-sm">
+                        {% if b.processed %}<span class="text-green-400">✅ {{ b.processed }}</span>{% endif %}
+                        {% if b.needs_review %}<span class="text-orange-400">⚠️ {{ b.needs_review }}</span>{% endif %}
+                        {% if b.failed %}<span class="text-red-400">❌ {{ b.failed }}</span>{% endif %}
+                        {% if b.pending %}<span class="text-gray-400">⏳ {{ b.pending }}</span>{% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+const entityId = "{{ entity.id }}";
+let selectedFiles = [];
+
+// Drag & drop
+const dropZone = document.getElementById('drop-zone');
+const dropIdle = document.getElementById('drop-idle');
+const dropActive = document.getElementById('drop-active');
+
+['dragenter', 'dragover'].forEach(e => {
+    dropZone.addEventListener(e, (ev) => {
+        ev.preventDefault();
+        dropZone.classList.add('border-green-500', 'bg-green-500/5');
+        dropZone.classList.remove('border-gray-600');
+        dropIdle.classList.add('hidden');
+        dropActive.classList.remove('hidden');
+    });
+});
+
+['dragleave', 'drop'].forEach(e => {
+    dropZone.addEventListener(e, (ev) => {
+        ev.preventDefault();
+        dropZone.classList.remove('border-green-500', 'bg-green-500/5');
+        dropZone.classList.add('border-gray-600');
+        dropIdle.classList.remove('hidden');
+        dropActive.classList.add('hidden');
+    });
+});
+
+dropZone.addEventListener('drop', (ev) => {
+    const files = Array.from(ev.dataTransfer.files);
+    addFiles(files);
+});
+
+document.getElementById('file-input').addEventListener('change', (ev) => {
+    addFiles(Array.from(ev.target.files));
+    ev.target.value = '';
+});
+
+function addFiles(files) {
+    selectedFiles = selectedFiles.concat(files);
+    renderFileList();
+}
+
+function clearFiles() {
+    selectedFiles = [];
+    renderFileList();
+}
+
+function renderFileList() {
+    const list = document.getElementById('file-list');
+    const items = document.getElementById('file-items');
+    const count = document.getElementById('file-count');
+
+    if (selectedFiles.length === 0) {
+        list.classList.add('hidden');
+        return;
+    }
+
+    list.classList.remove('hidden');
+    count.textContent = selectedFiles.length + ' bestanden geselecteerd';
+
+    const icons = {'.pdf': '📄', '.csv': '📊', '.sta': '🏦', '.mt940': '🏦', '.jpg': '🖼️', '.jpeg': '🖼️', '.png': '🖼️'};
+
+    items.innerHTML = selectedFiles.map((f, i) => {
+        const ext = '.' + f.name.split('.').pop().toLowerCase();
+        const icon = icons[ext] || '📎';
+        const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+'MB' : (f.size/1024).toFixed(0)+'KB';
+        return `<div class="flex items-center gap-3 bg-gray-800/50 rounded-lg px-4 py-2 text-sm">
+            <span>${icon}</span>
+            <span class="flex-1 text-gray-300 truncate">${f.name}</span>
+            <span class="text-gray-500">${size}</span>
+            <button onclick="removeFile(${i})" class="text-gray-500 hover:text-red-400">✕</button>
+        </div>`;
+    }).join('');
+}
+
+function removeFile(idx) {
+    selectedFiles.splice(idx, 1);
+    renderFileList();
+}
+
+async function startUpload() {
+    if (selectedFiles.length === 0) return;
+
+    const dropZone = document.getElementById('drop-zone');
+    const fileList = document.getElementById('file-list');
+    const progress = document.getElementById('upload-progress');
+    const bar = document.getElementById('upload-bar');
+    const statusText = document.getElementById('upload-status-text');
+
+    dropZone.classList.add('hidden');
+    fileList.classList.add('hidden');
+    progress.classList.remove('hidden');
+
+    const formData = new FormData();
+    selectedFiles.forEach(f => formData.append('files', f));
+
+    statusText.textContent = `${selectedFiles.length} bestanden uploaden...`;
+    bar.style.width = '30%';
+
+    try {
+        const resp = await fetch(`/entities/${entityId}/upload/files`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        bar.style.width = '100%';
+        const data = await resp.json();
+
+        if (data.error) {
+            statusText.textContent = '❌ ' + data.error;
+            return;
+        }
+
+        // Show processing status
+        progress.classList.add('hidden');
+        const procStatus = document.getElementById('processing-status');
+        procStatus.classList.remove('hidden');
+
+        const container = document.getElementById('batch-progress-container');
+        container.setAttribute('hx-get', `/entities/${entityId}/upload/batch/${data.batch_id}/status`);
+        container.setAttribute('hx-trigger', 'load, every 3s');
+        htmx.process(container);
+
+        // Show immediate summary
+        let msg = '';
+        if (data.bank_imported > 0) msg += `🏦 ${data.bank_imported} banktransacties geïmporteerd. `;
+        if (data.scans_queued > 0) msg += `📄 ${data.scans_queued} documenten in wachtrij voor OCR. `;
+        if (data.errors && data.errors.length > 0) msg += `⚠️ ${data.errors.length} fout(en). `;
+
+        container.innerHTML = `
+            <div class="bg-gray-900 border border-gray-700 rounded-xl p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="animate-spin text-2xl">⚙️</div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">Verwerken...</h2>
+                        <p class="text-sm text-gray-400">${msg}</p>
+                    </div>
+                </div>
+                <a href="/entities/${entityId}/upload/batch/${data.batch_id}"
+                   class="inline-block mt-3 text-green-400 hover:text-green-300 text-sm">
+                    📦 Bekijk resultaten →
+                </a>
+            </div>`;
+
+        // Redirect to results after a moment if all bank (instant)
+        if (data.scans_queued === 0) {
+            setTimeout(() => window.location.href = data.redirect, 1500);
+        }
+
+    } catch (err) {
+        bar.style.width = '100%';
+        bar.classList.remove('bg-green-500');
+        bar.classList.add('bg-red-500');
+        statusText.textContent = '❌ Upload mislukt: ' + err.message;
+    }
+}
+</script>
+{% endblock %}
