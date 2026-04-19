@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
@@ -30,7 +32,21 @@ BASE_DIR = Path(__file__).resolve().parent
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     async with engine.begin() as conn:
         await conn.execute(text("SELECT 1"))
+
+    # Start background task worker
+    from openboek.tasks.worker import run_worker
+    worker_task = asyncio.create_task(run_worker(), name="task-worker")
+    logging.getLogger("openboek.tasks").info("Background task worker started")
+
     yield
+
+    # Stop worker
+    worker_task.cancel()
+    try:
+        await worker_task
+    except asyncio.CancelledError:
+        pass
+    logging.getLogger("openboek.tasks").info("Background task worker stopped")
     await engine.dispose()
 
 
@@ -79,6 +95,7 @@ from openboek.tax.routes import router as tax_router
 from openboek.verification.routes import router as verification_router
 from openboek.scanner.routes import router as scanner_router
 from openboek.wizard.routes import router as wizard_router
+from openboek.tasks.routes import router as tasks_router
 
 app.include_router(auth_router)
 app.include_router(dashboard_router)
@@ -93,6 +110,7 @@ app.include_router(tax_router)
 app.include_router(verification_router)
 app.include_router(scanner_router)
 app.include_router(wizard_router)
+app.include_router(tasks_router)
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Task Queue — OpenBoek{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">🔄 Task Queue</h1>
+
+    <!-- Status summary -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        {% for s, label, color in [
+            ('pending', 'Pending', 'yellow'),
+            ('running', 'Running', 'blue'),
+            ('completed', 'Completed', 'green'),
+            ('failed', 'Failed', 'red'),
+            ('cancelled', 'Cancelled', 'gray')
+        ] %}
+        <a href="?status={{ s }}" class="bg-gray-900 border border-gray-800 rounded-lg p-4 text-center hover:border-{{ color }}-500 transition {% if current_status == s %}border-{{ color }}-500 ring-1 ring-{{ color }}-500{% endif %}">
+            <div class="text-2xl font-bold text-{{ color }}-400">{{ status_counts.get(s, 0) }}</div>
+            <div class="text-sm text-gray-400">{{ label }}</div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Filter bar -->
+    <div class="flex gap-4 mb-4 items-center">
+        <a href="/admin/tasks" class="text-sm px-3 py-1 rounded {% if not current_status and not current_type %}bg-green-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700{% endif %}">All</a>
+        {% for ttype, cnt in type_counts.items() %}
+        <a href="?task_type={{ ttype }}" class="text-sm px-3 py-1 rounded {% if current_type == ttype %}bg-green-600 text-white{% else %}bg-gray-800 text-gray-300 hover:bg-gray-700{% endif %}">
+            {{ ttype }} ({{ cnt }})
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Tasks table -->
+    <div class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-800 text-gray-400">
+                <tr>
+                    <th class="px-4 py-3 text-left">Type</th>
+                    <th class="px-4 py-3 text-left">Status</th>
+                    <th class="px-4 py-3 text-left">Created</th>
+                    <th class="px-4 py-3 text-left">Retry</th>
+                    <th class="px-4 py-3 text-left">Error</th>
+                    <th class="px-4 py-3 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800">
+                {% for task in tasks %}
+                <tr class="hover:bg-gray-800/50">
+                    <td class="px-4 py-3 font-mono text-green-400">{{ task.task_type }}</td>
+                    <td class="px-4 py-3">
+                        {% if task.status == 'pending' %}
+                            <span class="px-2 py-0.5 rounded-full text-xs bg-yellow-500/20 text-yellow-400">pending</span>
+                        {% elif task.status == 'running' %}
+                            <span class="px-2 py-0.5 rounded-full text-xs bg-blue-500/20 text-blue-400">running</span>
+                        {% elif task.status == 'completed' %}
+                            <span class="px-2 py-0.5 rounded-full text-xs bg-green-500/20 text-green-400">completed</span>
+                        {% elif task.status == 'failed' %}
+                            <span class="px-2 py-0.5 rounded-full text-xs bg-red-500/20 text-red-400">failed</span>
+                        {% else %}
+                            <span class="px-2 py-0.5 rounded-full text-xs bg-gray-500/20 text-gray-400">{{ task.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-gray-400">{{ task.created_at.strftime('%Y-%m-%d %H:%M') if task.created_at else '-' }}</td>
+                    <td class="px-4 py-3 text-gray-400">{{ task.retry_count }}/{{ task.max_retries }}</td>
+                    <td class="px-4 py-3 text-red-400 max-w-xs truncate" title="{{ task.error or '' }}">{{ (task.error or '')[:80] }}</td>
+                    <td class="px-4 py-3 flex gap-2">
+                        {% if task.status == 'pending' %}
+                        <form method="POST" action="/admin/tasks/{{ task.id }}/cancel" class="inline">
+                            <button class="text-xs px-2 py-1 bg-gray-700 rounded hover:bg-red-600 transition">Cancel</button>
+                        </form>
+                        {% endif %}
+                        {% if task.status == 'failed' %}
+                        <form method="POST" action="/admin/tasks/{{ task.id }}/retry" class="inline">
+                            <button class="text-xs px-2 py-1 bg-gray-700 rounded hover:bg-green-600 transition">Retry</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not tasks %}
+                <tr>
+                    <td colspan="6" class="px-4 py-8 text-center text-gray-500">No tasks found</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

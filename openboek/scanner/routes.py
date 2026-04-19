@@ -41,8 +41,7 @@ async def scanner_upload_page(
     """Show the receipt scanner / upload page."""
     entity = await get_entity_for_user(entity_id, user, session)
 
-    return _templates().TemplateResponse("scanner/upload.html", {
-        "request": request,
+    return _templates().TemplateResponse(request, "scanner/upload.html", {
         "entity": entity,
         "user": user,
         "lang": user.preferred_lang,
@@ -123,8 +122,7 @@ async def scanner_upload(
     )
     accounts = list(accounts_result.scalars().all())
 
-    return _templates().TemplateResponse("scanner/review.html", {
-        "request": request,
+    return _templates().TemplateResponse(request, "scanner/review.html", {
         "entity": entity,
         "user": user,
         "lang": user.preferred_lang,

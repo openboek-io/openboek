@@ -31,8 +31,7 @@ async def tax_optimizer_page(
     """Show the fiscal partnership optimizer form."""
     entity = await get_entity_for_user(entity_id, user, session)
 
-    return _templates().TemplateResponse("tax/optimizer.html", {
-        "request": request,
+    return _templates().TemplateResponse(request, "tax/optimizer.html", {
         "entity": entity,
         "user": user,
         "lang": user.preferred_lang,
@@ -93,8 +92,7 @@ async def tax_optimizer_calculate(
 
     result = optimize(partner_a, partner_b, shared)
 
-    return _templates().TemplateResponse("tax/optimizer.html", {
-        "request": request,
+    return _templates().TemplateResponse(request, "tax/optimizer.html", {
         "entity": entity,
         "user": user,
         "lang": user.preferred_lang,

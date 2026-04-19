@@ -61,8 +61,7 @@ async def ai_chat_page(
     if not selected_entity_id and entities:
         selected_entity_id = str(entities[0].id)
 
-    return _templates().TemplateResponse("ai/chat.html", {
-        "request": request,
+    return _templates().TemplateResponse(request, "ai/chat.html", {
         "user": user,
         "entities": entities,
         "selected_entity_id": selected_entity_id,
@@ -165,8 +164,7 @@ async def ai_insights_page(
         except Exception:
             pass  # Table may not exist yet
 
-    return _templates().TemplateResponse("ai/insights.html", {
-        "request": request,
+    return _templates().TemplateResponse(request, "ai/insights.html", {
         "user": user,
         "entities": entities,
         "selected_entity_id": selected_entity_id,

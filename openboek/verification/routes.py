@@ -64,8 +64,7 @@ async def verification_page(
     except Exception:
         pass
 
-    return _templates().TemplateResponse("verification/review.html", {
-        "request": request,
+    return _templates().TemplateResponse(request, "verification/review.html", {
         "entity": entity,
         "user": user,
         "lang": user.preferred_lang,
