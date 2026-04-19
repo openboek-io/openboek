@@ -64,8 +64,7 @@ async def task_list(
     )
     type_counts = {row.task_type: row.cnt for row in types_result}
 
-    return _templates().TemplateResponse("tasks/list.html", {
-        "request": request,
+    return _templates().TemplateResponse(request, "tasks/list.html", {
         "user": user,
         "tasks": tasks,
         "status_counts": status_counts,
