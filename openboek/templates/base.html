@@ -8,105 +8,253 @@
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <style>
         [x-cloak] { display: none !important; }
+        /* Slide-in mobile menu */
+        .mobile-menu { transform: translateX(-100%); transition: transform 0.25s ease-in-out; }
+        .mobile-menu.open { transform: translateX(0); }
+        .mobile-overlay { opacity: 0; pointer-events: none; transition: opacity 0.25s ease-in-out; }
+        .mobile-overlay.open { opacity: 1; pointer-events: auto; }
+        /* HTMX loading indicator */
+        .htmx-indicator { opacity: 0; transition: opacity 0.2s ease-in; }
+        .htmx-request .htmx-indicator { opacity: 1; }
+        /* Tooltip */
+        .tooltip-trigger:hover .tooltip-content { display: block; }
+        .tooltip-content { display: none; }
+        /* Active nav highlight */
+        .nav-active { background-color: rgba(34, 197, 94, 0.1); color: #4ade80; border-left: 3px solid #4ade80; }
     </style>
+    <script>
+        tailwind.config = {
+            theme: { extend: {} }
+        }
+    </script>
 </head>
 <body class="h-full bg-gray-950 text-white">
     <div class="flex h-full">
         {% if user is defined and user %}
-        <!-- Sidebar -->
-        <nav class="hidden md:flex md:w-64 md:flex-col bg-gray-900 border-r border-gray-800">
+
+        {# ===== DESKTOP SIDEBAR ===== #}
+        <nav class="hidden md:flex md:w-64 md:flex-col bg-gray-900 border-r border-gray-800 flex-shrink-0">
+            {# Logo #}
             <div class="flex h-16 items-center px-6 border-b border-gray-800">
                 <a href="/dashboard" class="text-xl font-bold text-green-400">📗 OpenBoek</a>
             </div>
-            <div class="flex-1 overflow-y-auto py-4">
-                <ul class="space-y-1 px-3">
-                    <li>
-                        <a href="/dashboard" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
-                            <span>📊</span> {{ t('nav.dashboard') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/entities" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
-                            <span>🏢</span> {{ t('nav.entities') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/ai" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
-                            <span>🤖</span> {{ t('nav.ai') }}
-                        </a>
-                    </li>
-                    {% if entity is defined and entity %}
-                    <li class="pt-4 pb-2 px-3">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ entity.name }}</span>
-                    </li>
-                    <li>
-                        <a href="/entities/{{ entity.id }}/accounts" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
-                            <span>📋</span> {{ t('nav.accounting') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/entities/{{ entity.id }}/journal" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
-                            <span>📖</span> Journal
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/entities/{{ entity.id }}/invoices" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
-                            <span>🧾</span> {{ t('nav.invoices') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/entities/{{ entity.id }}/banking" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
-                            <span>🏦</span> {{ t('nav.banking') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/entities/{{ entity.id }}/reports/trial-balance" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
-                            <span>📈</span> {{ t('nav.reports') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/entities/{{ entity.id }}/audit" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
-                            <span>🔍</span> {{ t('nav.audit') }}
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
+
+            {# Entity Switcher #}
+            {% if all_entities is defined and all_entities|length > 0 %}
+            <div class="px-3 py-3 border-b border-gray-800">
+                <label class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 px-3 mb-1 block">Bedrijf</label>
+                <select id="entity-switcher" onchange="if(this.value) window.location.href='/entities/'+this.value"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <option value="">— Kies bedrijf —</option>
+                    {% for e in all_entities %}
+                    <option value="{{ e.id }}" {% if entity is defined and entity and entity.id == e.id %}selected{% endif %}>
+                        {{ e.name }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
+            {% endif %}
+
+            <div class="flex-1 overflow-y-auto py-4">
+                {# Global navigation #}
+                <ul class="space-y-0.5 px-3">
+                    <li>
+                        <a href="/dashboard" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if request.url.path == '/dashboard' %}nav-active{% endif %}">
+                            <span class="text-base">🏠</span> {{ t('nav.dashboard') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/entities" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if request.url.path == '/entities' %}nav-active{% endif %}">
+                            <span class="text-base">🏢</span> {{ t('nav.entities') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/ai" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/ai' in request.url.path %}nav-active{% endif %}">
+                            <span class="text-base">🤖</span> {{ t('nav.ai') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/tasks" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/admin/tasks' in request.url.path %}nav-active{% endif %}">
+                            <span class="text-base">📋</span> {{ t('nav.tasks') }}
+                        </a>
+                    </li>
+                </ul>
+
+                {# Entity-specific navigation #}
+                {% if entity is defined and entity %}
+                <div class="mt-4 pt-4 border-t border-gray-800">
+                    <div class="px-6 mb-2">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">{{ entity.name }}</span>
+                    </div>
+                    <ul class="space-y-0.5 px-3">
+                        <li>
+                            <a href="/entities/{{ entity.id }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if request.url.path == '/entities/' ~ entity.id|string %}nav-active{% endif %}">
+                                <span class="text-base">📊</span> {{ t('entity.overview') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/entities/{{ entity.id }}/journal" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/journal' in request.url.path %}nav-active{% endif %}">
+                                <span class="text-base">📖</span> {{ t('nav.journal') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/entities/{{ entity.id }}/invoices" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/invoices' in request.url.path %}nav-active{% endif %}">
+                                <span class="text-base">🧾</span> {{ t('nav.invoices') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/entities/{{ entity.id }}/banking" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/banking' in request.url.path %}nav-active{% endif %}">
+                                <span class="text-base">🏦</span> {{ t('nav.banking') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/entities/{{ entity.id }}/scanner" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/scanner' in request.url.path %}nav-active{% endif %}">
+                                <span class="text-base">📸</span> {{ t('nav.scanner') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/entities/{{ entity.id }}/accounts" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/accounts' in request.url.path %}nav-active{% endif %}">
+                                <span class="text-base">📋</span> {{ t('nav.accounting') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/entities/{{ entity.id }}/reports/trial-balance" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/reports' in request.url.path %}nav-active{% endif %}">
+                                <span class="text-base">📈</span> {{ t('nav.reports') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/entities/{{ entity.id }}/tax/optimizer" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/tax' in request.url.path %}nav-active{% endif %}">
+                                <span class="text-base">💰</span> {{ t('nav.tax') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/entities/{{ entity.id }}/verification" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/verification' in request.url.path %}nav-active{% endif %}">
+                                <span class="text-base">✅</span> {{ t('nav.verification') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/entities/{{ entity.id }}/audit" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition {% if '/audit' in request.url.path %}nav-active{% endif %}">
+                                <span class="text-base">🔍</span> {{ t('nav.audit') }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+            {# User footer #}
             <div class="border-t border-gray-800 p-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-400">{{ user.username }}</span>
+                    <a href="/logout" class="text-sm text-gray-500 hover:text-red-400 transition">{{ t('nav.logout') }}</a>
+                </div>
+            </div>
+        </nav>
+
+        {# ===== MOBILE HEADER ===== #}
+        <div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800 h-14 flex items-center justify-between px-4">
+            <button onclick="document.getElementById('mobile-menu').classList.add('open'); document.getElementById('mobile-overlay').classList.add('open');"
+                class="text-gray-300 hover:text-white p-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <a href="/dashboard" class="text-lg font-bold text-green-400">📗 OpenBoek</a>
+            <div class="w-6"></div>
+        </div>
+
+        {# ===== MOBILE OVERLAY ===== #}
+        <div id="mobile-overlay" class="mobile-overlay fixed inset-0 bg-black/60 z-[60] md:hidden"
+            onclick="document.getElementById('mobile-menu').classList.remove('open'); this.classList.remove('open');"></div>
+
+        {# ===== MOBILE SLIDE-IN MENU ===== #}
+        <div id="mobile-menu" class="mobile-menu fixed top-0 left-0 bottom-0 w-72 bg-gray-900 z-[70] md:hidden overflow-y-auto">
+            <div class="flex items-center justify-between h-14 px-4 border-b border-gray-800">
+                <span class="text-lg font-bold text-green-400">📗 OpenBoek</span>
+                <button onclick="this.closest('.mobile-menu').classList.remove('open'); document.getElementById('mobile-overlay').classList.remove('open');"
+                    class="text-gray-400 hover:text-white p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {# Entity switcher (mobile) #}
+            {% if all_entities is defined and all_entities|length > 0 %}
+            <div class="px-4 py-3 border-b border-gray-800">
+                <select onchange="if(this.value) window.location.href='/entities/'+this.value"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white">
+                    <option value="">— Kies bedrijf —</option>
+                    {% for e in all_entities %}
+                    <option value="{{ e.id }}" {% if entity is defined and entity and entity.id == e.id %}selected{% endif %}>{{ e.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="py-3">
+                <ul class="space-y-0.5 px-3">
+                    <li><a href="/dashboard" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800 {% if request.url.path == '/dashboard' %}nav-active{% endif %}"><span>🏠</span> {{ t('nav.dashboard') }}</a></li>
+                    <li><a href="/entities" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800 {% if request.url.path == '/entities' %}nav-active{% endif %}"><span>🏢</span> {{ t('nav.entities') }}</a></li>
+                    <li><a href="/ai" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800 {% if '/ai' in request.url.path %}nav-active{% endif %}"><span>🤖</span> {{ t('nav.ai') }}</a></li>
+                    <li><a href="/admin/tasks" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800 {% if '/admin/tasks' in request.url.path %}nav-active{% endif %}"><span>📋</span> {{ t('nav.tasks') }}</a></li>
+                </ul>
+
+                {% if entity is defined and entity %}
+                <div class="mt-3 pt-3 border-t border-gray-800">
+                    <div class="px-6 mb-2"><span class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">{{ entity.name }}</span></div>
+                    <ul class="space-y-0.5 px-3">
+                        <li><a href="/entities/{{ entity.id }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>📊</span> {{ t('entity.overview') }}</a></li>
+                        <li><a href="/entities/{{ entity.id }}/journal" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>📖</span> {{ t('nav.journal') }}</a></li>
+                        <li><a href="/entities/{{ entity.id }}/invoices" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>🧾</span> {{ t('nav.invoices') }}</a></li>
+                        <li><a href="/entities/{{ entity.id }}/banking" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>🏦</span> {{ t('nav.banking') }}</a></li>
+                        <li><a href="/entities/{{ entity.id }}/scanner" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>📸</span> {{ t('nav.scanner') }}</a></li>
+                        <li><a href="/entities/{{ entity.id }}/accounts" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>📋</span> {{ t('nav.accounting') }}</a></li>
+                        <li><a href="/entities/{{ entity.id }}/reports/trial-balance" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>📈</span> {{ t('nav.reports') }}</a></li>
+                        <li><a href="/entities/{{ entity.id }}/tax/optimizer" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>💰</span> {{ t('nav.tax') }}</a></li>
+                        <li><a href="/entities/{{ entity.id }}/verification" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>✅</span> {{ t('nav.verification') }}</a></li>
+                        <li><a href="/entities/{{ entity.id }}/audit" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-800"><span>🔍</span> {{ t('nav.audit') }}</a></li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mt-auto border-t border-gray-800 p-4">
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-400">{{ user.username }}</span>
                     <a href="/logout" class="text-sm text-gray-500 hover:text-red-400">{{ t('nav.logout') }}</a>
                 </div>
             </div>
-        </nav>
-
-        <!-- Mobile header -->
-        <div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800 h-14 flex items-center justify-between px-4">
-            <a href="/dashboard" class="text-lg font-bold text-green-400">📗 OpenBoek</a>
-            <div class="flex items-center gap-3">
-                <a href="/entities" class="text-gray-400 hover:text-white text-sm">🏢</a>
-                <a href="/logout" class="text-gray-400 hover:text-red-400 text-sm">↪</a>
-            </div>
         </div>
+
         {% endif %}
 
-        <!-- Main content -->
+        {# ===== MAIN CONTENT ===== #}
         <main class="flex-1 overflow-y-auto {% if user is defined and user %}md:ml-0 mt-14 md:mt-0{% endif %}">
+            {# Flash messages #}
             {% if request.query_params.get('success') %}
-            <div class="bg-green-900/50 border border-green-700 text-green-300 px-4 py-3 m-4 rounded-lg">
-                ✅ {{ request.query_params.get('success') }}
+            <div class="bg-green-900/50 border border-green-700 text-green-300 px-4 py-3 m-4 rounded-lg flex items-center gap-2">
+                <span>✅</span> {{ request.query_params.get('success') }}
             </div>
             {% endif %}
             {% if request.query_params.get('error') %}
-            <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 m-4 rounded-lg">
-                ❌ {{ request.query_params.get('error') }}
+            <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 m-4 rounded-lg flex items-center gap-2">
+                <span>❌</span> {{ request.query_params.get('error') }}
             </div>
             {% endif %}
+
+            {# Breadcrumbs #}
+            {% block breadcrumbs %}{% endblock %}
 
             <div class="p-4 md:p-8">
                 {% block content %}{% endblock %}
             </div>
         </main>
+    </div>
+
+    {# HTMX loading indicator (global) #}
+    <div id="htmx-global-indicator" class="htmx-indicator fixed top-0 left-0 right-0 h-1 bg-green-500/50 z-[100]">
+        <div class="h-full bg-green-400 animate-pulse" style="width: 100%"></div>
     </div>
 </body>
 </html>

@@ -1,5 +1,19 @@
 {% extends "base.html" %}
 {% block title %}{% if entry %}Edit Entry{% else %}New Journal Entry{% endif %} — OpenBoek{% endblock %}
+{% block breadcrumbs %}
+<nav class="px-4 md:px-8 pt-4 text-sm">
+    <ol class="flex items-center gap-2 text-gray-500">
+        <li><a href="/dashboard" class="hover:text-white transition">Home</a></li>
+        <li>/</li>
+        {% if entity is defined and entity %}
+        <li><a href="/entities/{{ entity.id }}" class="hover:text-white transition">{{ entity.name }}</a></li>
+        <li>/</li>
+        {% endif %}
+        <li class="text-gray-300">Transacties</li>
+    </ol>
+</nav>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-4xl mx-auto">
     <h1 class="text-2xl font-bold mb-6">

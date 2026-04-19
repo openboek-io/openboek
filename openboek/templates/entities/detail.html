@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}{{ entity.name }} — OpenBoek{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="px-4 md:px-8 pt-4 text-sm">
+    <ol class="flex items-center gap-2 text-gray-500">
+        <li><a href="/dashboard" class="hover:text-white transition">{{ t('breadcrumb.home') }}</a></li>
+        <li>/</li>
+        <li><a href="/entities" class="hover:text-white transition">{{ t('breadcrumb.businesses') }}</a></li>
+        <li>/</li>
+        <li class="text-gray-300">{{ entity.name }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    {# Header #}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
+        <div>
+            <h1 class="text-2xl font-bold flex items-center gap-2">
+                {% if entity.entity_type.value == 'zzp' %}💼
+                {% elif entity.entity_type.value == 'bv' %}🏢
+                {% elif entity.entity_type.value == 'holding' %}🏛️
+                {% else %}🏠{% endif %}
+                {{ entity.name }}
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">
+                {{ t('entity_type.' + entity.entity_type.value) }}
+                {% if entity.kvk_number %} · KVK {{ entity.kvk_number }}{% endif %}
+                {% if entity.city %} · {{ entity.city }}{% endif %}
+            </p>
+        </div>
+        <a href="/entities/{{ entity.id }}/edit" class="text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition">
+            ✏️ {{ t('entity.edit_details') }}
+        </a>
+    </div>
+
+    {# Financial Overview Cards #}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('dash.what_you_own') }}</p>
+            <p class="text-xl font-bold mt-1 {% if stats.assets >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                €{{ "{:,.2f}".format(stats.assets) }}
+            </p>
+        </div>
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('dash.what_you_owe') }}</p>
+            <p class="text-xl font-bold mt-1 text-gray-300">€{{ "{:,.2f}".format(stats.liabilities) }}</p>
+        </div>
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+            <p class="text-[10px] text-gray-500 uppercase tracking-wide">{{ t('dash.money_in') }}</p>
+            <p class="text-xl font-bold mt-1 text-green-400">€{{ "{:,.2f}".format(stats.revenue) }}</p>
+        </div>
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+            <p class="text-[10px] text-gray-500 uppercase tracking-wide">
+                {% if stats.profit >= 0 %}{{ t('dash.profit') }}{% else %}{{ t('dash.loss') }}{% endif %}
+            </p>
+            <p class="text-xl font-bold mt-1 {% if stats.profit >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                €{{ "{:,.2f}".format(stats.profit) }}
+            </p>
+        </div>
+    </div>
+
+    {# Quick Actions for this entity #}
+    <div class="mb-8">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ t('dash.quick_actions') }}</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <a href="/entities/{{ entity.id }}/journal/new?type=expense" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-green-700/50 rounded-xl p-4 text-center transition group">
+                <span class="text-2xl block mb-2">💸</span>
+                <span class="text-xs text-gray-400 group-hover:text-white">{{ t('dash.action_expense') }}</span>
+            </a>
+            <a href="/entities/{{ entity.id }}/invoices/new" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-green-700/50 rounded-xl p-4 text-center transition group">
+                <span class="text-2xl block mb-2">🧾</span>
+                <span class="text-xs text-gray-400 group-hover:text-white">{{ t('dash.action_invoice') }}</span>
+            </a>
+            <a href="/entities/{{ entity.id }}/journal/new?type=income" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-green-700/50 rounded-xl p-4 text-center transition group">
+                <span class="text-2xl block mb-2">💰</span>
+                <span class="text-xs text-gray-400 group-hover:text-white">{{ t('dash.action_income') }}</span>
+            </a>
+            <a href="/entities/{{ entity.id }}/scanner" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-green-700/50 rounded-xl p-4 text-center transition group">
+                <span class="text-2xl block mb-2">📸</span>
+                <span class="text-xs text-gray-400 group-hover:text-white">{{ t('dash.action_scan') }}</span>
+            </a>
+            <a href="/entities/{{ entity.id }}/banking/import" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-green-700/50 rounded-xl p-4 text-center transition group">
+                <span class="text-2xl block mb-2">🏦</span>
+                <span class="text-xs text-gray-400 group-hover:text-white">{{ t('dash.action_bank_import') }}</span>
+            </a>
+            <a href="/entities/{{ entity.id }}/verification" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-green-700/50 rounded-xl p-4 text-center transition group">
+                <span class="text-2xl block mb-2">📝</span>
+                <span class="text-xs text-gray-400 group-hover:text-white">{{ t('dash.action_tax') }}</span>
+            </a>
+        </div>
+    </div>
+
+    {# Feature navigation grid + Recent Transactions #}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {# Go To section #}
+        <div class="lg:col-span-1">
+            <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ t('entity.quick_links') }}</h2>
+                <div class="space-y-1">
+                    <a href="/entities/{{ entity.id }}/journal" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        <span>📖</span> {{ t('nav.journal') }}
+                    </a>
+                    <a href="/entities/{{ entity.id }}/invoices" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        <span>🧾</span> {{ t('nav.invoices') }}
+                    </a>
+                    <a href="/entities/{{ entity.id }}/banking" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        <span>🏦</span> {{ t('nav.banking') }}
+                    </a>
+                    <a href="/entities/{{ entity.id }}/scanner" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        <span>📸</span> {{ t('nav.scanner') }}
+                    </a>
+                    <a href="/entities/{{ entity.id }}/accounts" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        <span>📋</span> {{ t('nav.accounting') }}
+                    </a>
+                    <a href="/entities/{{ entity.id }}/reports/trial-balance" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        <span>📈</span> {{ t('nav.reports') }}
+                    </a>
+                    <a href="/entities/{{ entity.id }}/tax/optimizer" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        <span>💰</span> {{ t('nav.tax') }}
+                    </a>
+                    <a href="/entities/{{ entity.id }}/verification" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        <span>✅</span> {{ t('nav.verification') }}
+                    </a>
+                    <a href="/entities/{{ entity.id }}/audit" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        <span>🔍</span> {{ t('nav.audit') }}
+                    </a>
+                    <a href="/entities/{{ entity.id }}/relationships" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        <span>🔗</span> Relaties
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {# Recent Transactions #}
+        <div class="lg:col-span-2">
+            <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">{{ t('entity.recent_transactions') }}</h2>
+                    {% if recent_entries %}
+                    <a href="/entities/{{ entity.id }}/journal" class="text-xs text-green-400 hover:underline">{{ t('dash.view_all') }} →</a>
+                    {% endif %}
+                </div>
+                {% if recent_entries %}
+                <div class="space-y-2">
+                    {% for entry in recent_entries %}
+                    <a href="/entities/{{ entity.id }}/journal/{{ entry.id }}" class="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-gray-800 transition border-b border-gray-800/50 last:border-0">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="text-lg flex-shrink-0">
+                                {% if entry.description and 'Receipt' in entry.description %}📸
+                                {% elif entry.description and 'Invoice' in entry.description %}🧾
+                                {% else %}📖{% endif %}
+                            </span>
+                            <div class="min-w-0">
+                                <p class="text-sm text-white truncate">{{ entry.description or 'Transactie' }}</p>
+                                <p class="text-xs text-gray-500">{{ entry.date.strftime('%d %b %Y') }}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs px-2 py-0.5 rounded-full flex-shrink-0 ml-2
+                            {% if entry.status.value == 'posted' %}bg-green-900/50 text-green-400
+                            {% elif entry.status.value == 'draft' %}bg-yellow-900/50 text-yellow-400
+                            {% elif entry.status.value == 'locked' %}bg-gray-700 text-gray-400
+                            {% else %}bg-gray-700 text-gray-400{% endif %}">
+                            {{ entry.status.value }}
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <p class="text-3xl mb-3">📖</p>
+                    <p class="text-gray-400 text-sm">{{ t('entity.no_transactions') }}</p>
+                    <a href="/entities/{{ entity.id }}/journal/new" class="inline-block mt-3 text-green-400 hover:underline text-sm">
+                        Eerste transactie boeken →
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Contextual tip based on entity type #}
+    <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-5 flex items-start gap-3">
+        <span class="text-2xl">💡</span>
+        <div>
+            <p class="text-sm font-medium text-gray-300">Tip</p>
+            <p class="text-sm text-gray-500 mt-1">
+                {% if entity.entity_type.value == 'zzp' %}{{ t('entity.zzp_tip') }}
+                {% elif entity.entity_type.value == 'bv' %}{{ t('entity.bv_tip') }}
+                {% elif entity.entity_type.value == 'holding' %}{{ t('entity.holding_tip') }}
+                {% else %}{{ t('entity.personal_tip') }}{% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

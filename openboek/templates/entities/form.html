@@ -1,81 +1,115 @@
 {% extends "base.html" %}
-{% block title %}{% if entity %}{{ entity.name }}{% else %}New Entity{% endif %} — OpenBoek{% endblock %}
+{% block title %}{% if entity %}{{ entity.name }} bewerken{% else %}Nieuw bedrijf{% endif %} — OpenBoek{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="px-4 md:px-8 pt-4 text-sm">
+    <ol class="flex items-center gap-2 text-gray-500">
+        <li><a href="/dashboard" class="hover:text-white transition">{{ t('breadcrumb.home') }}</a></li>
+        <li>/</li>
+        <li><a href="/entities" class="hover:text-white transition">{{ t('breadcrumb.businesses') }}</a></li>
+        {% if entity %}
+        <li>/</li>
+        <li><a href="/entities/{{ entity.id }}" class="hover:text-white transition">{{ entity.name }}</a></li>
+        <li>/</li>
+        <li class="text-gray-300">Bewerken</li>
+        {% else %}
+        <li>/</li>
+        <li class="text-gray-300">Nieuw</li>
+        {% endif %}
+    </ol>
+</nav>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">
-        {% if entity %}{{ t('action.edit') }}: {{ entity.name }}{% else %}{{ t('action.create') }} Entity{% endif %}
+    <h1 class="text-2xl font-bold mb-2">
+        {% if entity %}✏️ {{ entity.name }} bewerken{% else %}🏢 Nieuw bedrijf aanmaken{% endif %}
     </h1>
+    {% if not entity %}
+    <p class="text-gray-400 text-sm mb-6">Vul de basisgegevens van je bedrijf in. Je kunt dit later altijd aanpassen.</p>
+    {% else %}
+    <p class="text-gray-400 text-sm mb-6">Pas de gegevens van je bedrijf aan.</p>
+    {% endif %}
 
     {% if error %}
     <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg mb-4">{{ error }}</div>
     {% endif %}
 
-    <form method="POST" action="{% if entity %}/entities/{{ entity.id }}{% else %}/entities{% endif %}" class="space-y-4">
+    <form method="POST" action="{% if entity %}/entities/{{ entity.id }}{% else %}/entities{% endif %}" class="space-y-5">
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Name</label>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Bedrijfsnaam</label>
             <input type="text" name="name" value="{{ entity.name if entity else '' }}" required
-                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                placeholder="Bijv. Jansen Webdesign"
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
         </div>
 
         {% if not entity %}
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Type</label>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Type onderneming</label>
             <select name="entity_type"
-                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500">
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-green-500">
                 {% for et in entity_types %}
                 <option value="{{ et.value }}">{{ t('entity_type.' + et.value) }}</option>
                 {% endfor %}
             </select>
+            <p class="text-xs text-gray-500 mt-1">Dit bepaalt welk rekeningschema we voor je klaarzetten.</p>
         </div>
         {% endif %}
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">KVK Number</label>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    KVK-nummer
+                    <span class="relative inline-block ml-1 tooltip-trigger cursor-help">
+                        <span class="text-gray-500">ℹ️</span>
+                        <span class="tooltip-content absolute bottom-full left-0 mb-2 w-56 p-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-400 shadow-lg z-10">
+                            Je KVK-nummer vind je op kvk.nl of op je inschrijvingsbewijs. We gebruiken dit om je belastingformulieren automatisch in te vullen.
+                        </span>
+                    </span>
+                </label>
                 <input type="text" name="kvk_number" value="{{ entity.kvk_number if entity and entity.kvk_number else '' }}"
-                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    placeholder="12345678"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">BTW Number</label>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    BTW-nummer
+                    <span class="relative inline-block ml-1 tooltip-trigger cursor-help">
+                        <span class="text-gray-500">ℹ️</span>
+                        <span class="tooltip-content absolute bottom-full left-0 mb-2 w-56 p-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-400 shadow-lg z-10">
+                            Je BTW-nummer begint met NL en eindigt op B01 (of B02, B03...). Nodig voor je BTW-aangifte.
+                        </span>
+                    </span>
+                </label>
                 <input type="text" name="btw_number" value="{{ entity.btw_number if entity and entity.btw_number else '' }}"
-                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    placeholder="NL123456789B01"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
             </div>
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">Address</label>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Adres</label>
             <input type="text" name="address" value="{{ entity.address if entity and entity.address else '' }}"
-                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                placeholder="Straatnaam 1"
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">City</label>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Plaats</label>
             <input type="text" name="city" value="{{ entity.city if entity and entity.city else '' }}"
-                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                placeholder="Amsterdam"
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
         </div>
 
         <div class="flex gap-3 pt-4">
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition">
-                {{ t('action.save') }}
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg font-medium transition">
+                {% if entity %}{{ t('action.save') }}{% else %}Bedrijf aanmaken{% endif %}
             </button>
             <a href="{% if entity %}/entities/{{ entity.id }}{% else %}/entities{% endif %}"
-                class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition">
+                class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2.5 rounded-lg transition">
                 {{ t('action.cancel') }}
             </a>
         </div>
     </form>
-
-    {% if entity %}
-    <div class="mt-8 pt-6 border-t border-gray-800">
-        <h2 class="text-lg font-semibold mb-4">Quick Links</h2>
-        <div class="flex flex-wrap gap-3">
-            <a href="/entities/{{ entity.id }}/accounts" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">📋 Accounts</a>
-            <a href="/entities/{{ entity.id }}/journal" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">📖 Journal</a>
-            <a href="/entities/{{ entity.id }}/invoices" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">🧾 Invoices</a>
-            <a href="/entities/{{ entity.id }}/banking" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">🏦 Banking</a>
-            <a href="/entities/{{ entity.id }}/relationships" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">🔗 Relationships</a>
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}

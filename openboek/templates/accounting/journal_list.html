@@ -1,25 +1,38 @@
 {% extends "base.html" %}
-{% block title %}Journal — {{ entity.name }} — OpenBoek{% endblock %}
+{% block title %}{{ t('nav.journal') }} — {{ entity.name }} — OpenBoek{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="px-4 md:px-8 pt-4 text-sm">
+    <ol class="flex items-center gap-2 text-gray-500">
+        <li><a href="/dashboard" class="hover:text-white transition">{{ t('breadcrumb.home') }}</a></li>
+        <li>/</li>
+        <li><a href="/entities/{{ entity.id }}" class="hover:text-white transition">{{ entity.name }}</a></li>
+        <li>/</li>
+        <li class="text-gray-300">{{ t('nav.journal') }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-5xl mx-auto">
     <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold">📖 Journal Entries</h1>
+        <h1 class="text-2xl font-bold">📖 {{ t('nav.journal') }}</h1>
         <a href="/entities/{{ entity.id }}/journal/new"
-            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
-            + New Entry
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+            + Nieuwe transactie
         </a>
     </div>
 
-    <!-- Filters -->
+    {# Filters #}
     <form method="GET" class="bg-gray-900 rounded-lg border border-gray-800 p-4 mb-6">
         <div class="flex flex-wrap gap-4 items-end">
             <div>
-                <label class="block text-xs text-gray-400 mb-1">From</label>
+                <label class="block text-xs text-gray-400 mb-1">Vanaf</label>
                 <input type="date" name="date_from" value="{{ date_from }}"
                     class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
             </div>
             <div>
-                <label class="block text-xs text-gray-400 mb-1">To</label>
+                <label class="block text-xs text-gray-400 mb-1">Tot</label>
                 <input type="date" name="date_to" value="{{ date_to }}"
                     class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
             </div>
@@ -27,14 +40,14 @@
                 <label class="block text-xs text-gray-400 mb-1">Status</label>
                 <select name="status"
                     class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
-                    <option value="">All</option>
+                    <option value="">Alle</option>
                     <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>{{ t('journal_status.draft') }}</option>
                     <option value="posted" {% if status_filter == 'posted' %}selected{% endif %}>{{ t('journal_status.posted') }}</option>
                     <option value="locked" {% if status_filter == 'locked' %}selected{% endif %}>{{ t('journal_status.locked') }}</option>
                 </select>
             </div>
             <button type="submit" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1.5 rounded text-sm transition">
-                Filter
+                Filteren
             </button>
         </div>
     </form>
@@ -44,24 +57,24 @@
         <table class="w-full text-sm">
             <thead>
                 <tr class="border-b border-gray-800 bg-gray-900/50">
-                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
-                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Description</th>
-                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Reference</th>
-                    <th class="text-right px-4 py-3 text-gray-400 font-medium">Total</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Datum</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Omschrijving</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium hidden md:table-cell">Referentie</th>
+                    <th class="text-right px-4 py-3 text-gray-400 font-medium">Bedrag</th>
                     <th class="text-center px-4 py-3 text-gray-400 font-medium">Status</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-800">
                 {% for entry in entries %}
                 <tr class="hover:bg-gray-800/50 cursor-pointer" onclick="window.location='/entities/{{ entity.id }}/journal/{{ entry.id }}'">
-                    <td class="px-4 py-2 font-mono text-gray-300">{{ entry.date }}</td>
-                    <td class="px-4 py-2">{{ entry.description or '—' }}</td>
-                    <td class="px-4 py-2 text-gray-400">{{ entry.reference or '—' }}</td>
-                    <td class="px-4 py-2 text-right font-mono">
+                    <td class="px-4 py-2.5 font-mono text-gray-300 text-xs">{{ entry.date.strftime('%d-%m-%Y') }}</td>
+                    <td class="px-4 py-2.5">{{ entry.description or '—' }}</td>
+                    <td class="px-4 py-2.5 text-gray-400 hidden md:table-cell">{{ entry.reference or '—' }}</td>
+                    <td class="px-4 py-2.5 text-right font-mono">
                         €{{ "{:,.2f}".format(entry.lines | sum(attribute='debit')) }}
                     </td>
-                    <td class="px-4 py-2 text-center">
-                        <span class="text-xs px-2 py-0.5 rounded
+                    <td class="px-4 py-2.5 text-center">
+                        <span class="text-xs px-2 py-0.5 rounded-full
                             {% if entry.status.value == 'draft' %}bg-yellow-900/50 text-yellow-400
                             {% elif entry.status.value == 'posted' %}bg-green-900/50 text-green-400
                             {% elif entry.status.value == 'locked' %}bg-gray-700 text-gray-400
@@ -75,9 +88,18 @@
         </table>
     </div>
     {% else %}
-    <div class="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
-        <p class="text-gray-400 mb-4">No journal entries yet.</p>
-        <a href="/entities/{{ entity.id }}/journal/new" class="text-green-400 hover:underline">Create your first entry →</a>
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-12 text-center">
+        <p class="text-4xl mb-4">📖</p>
+        <h2 class="text-lg font-semibold mb-2">{{ t('empty.journal') }}</h2>
+        <p class="text-gray-500 text-sm mb-4">Transacties zijn de basis van je boekhouding. Elke keer dat je iets betaalt of ontvangt, leg je het hier vast.</p>
+        <div class="flex flex-wrap justify-center gap-3">
+            <a href="/entities/{{ entity.id }}/journal/new?type=expense" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                💸 Ik heb iets betaald
+            </a>
+            <a href="/entities/{{ entity.id }}/scanner" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                📸 Bonnetje scannen
+            </a>
+        </div>
     </div>
     {% endif %}
 </div>

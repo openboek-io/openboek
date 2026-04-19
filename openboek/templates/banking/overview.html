@@ -1,34 +1,47 @@
 {% extends "base.html" %}
-{% block title %}Banking — {{ entity.name }} — OpenBoek{% endblock %}
+{% block title %}{{ t('nav.banking') }} — {{ entity.name }} — OpenBoek{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="px-4 md:px-8 pt-4 text-sm">
+    <ol class="flex items-center gap-2 text-gray-500">
+        <li><a href="/dashboard" class="hover:text-white transition">{{ t('breadcrumb.home') }}</a></li>
+        <li>/</li>
+        <li><a href="/entities/{{ entity.id }}" class="hover:text-white transition">{{ entity.name }}</a></li>
+        <li>/</li>
+        <li class="text-gray-300">{{ t('nav.banking') }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-5xl mx-auto">
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold">🏦 {{ t('nav.banking') }}</h1>
         <div class="flex gap-2">
             <a href="/entities/{{ entity.id }}/banking/import"
-                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                📥 Import MT940
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                📥 Importeren
             </a>
             <a href="/entities/{{ entity.id }}/banking/reconcile"
                 class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition">
-                🔗 Reconcile
+                🔗 Matchen
             </a>
         </div>
     </div>
 
-    <!-- Bank Accounts -->
+    {# Bank Accounts #}
     <div class="mb-8">
-        <h2 class="text-lg font-semibold mb-4">Bank Accounts</h2>
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Bankrekeningen</h2>
         {% if bank_accounts %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {% for acc in bank_accounts %}
-            <div class="bg-gray-900 rounded-lg border border-gray-800 p-4">
+            <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="font-medium">{{ acc.name }}</p>
                         <p class="text-sm text-gray-400 font-mono">{{ acc.iban }}</p>
                     </div>
-                    <p class="text-lg font-mono {% if acc.current_balance >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                    <p class="text-xl font-bold font-mono {% if acc.current_balance >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
                         €{{ "{:,.2f}".format(acc.current_balance) }}
                     </p>
                 </div>
@@ -36,62 +49,75 @@
             {% endfor %}
         </div>
         {% else %}
-        <p class="text-gray-400">No bank accounts linked yet.</p>
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
+            <p class="text-3xl mb-3">🏦</p>
+            <p class="text-gray-400 text-sm mb-1">Nog geen bankrekeningen gekoppeld.</p>
+            <p class="text-gray-500 text-xs">Voeg hieronder je bankrekening toe om transacties te importeren.</p>
+        </div>
         {% endif %}
 
-        <!-- Add Bank Account -->
-        <div class="mt-4 bg-gray-900 rounded-lg border border-gray-800 p-4">
+        {# Add Bank Account #}
+        <div class="mt-4 bg-gray-900 rounded-xl border border-gray-800 p-5">
+            <h3 class="text-sm font-medium text-gray-300 mb-3">Bankrekening toevoegen</h3>
             <form method="POST" action="/entities/{{ entity.id }}/banking/accounts" class="flex flex-wrap gap-3 items-end">
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1">Name</label>
+                    <label class="block text-xs text-gray-400 mb-1">Naam</label>
                     <input type="text" name="name" required placeholder="ING Zakelijk"
-                        class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
+                        class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600">
                 </div>
                 <div>
                     <label class="block text-xs text-gray-400 mb-1">IBAN</label>
                     <input type="text" name="iban" required placeholder="NL00INGB0000000000"
-                        class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
+                        class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1">Opening Balance</label>
+                    <label class="block text-xs text-gray-400 mb-1">
+                        Beginsaldo
+                        <span class="relative inline-block ml-1 tooltip-trigger cursor-help">
+                            <span class="text-gray-500">ℹ️</span>
+                            <span class="tooltip-content absolute bottom-full left-0 mb-2 w-48 p-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-400 shadow-lg z-10">
+                                Het saldo op je bankrekening op het moment dat je begint met boeken in OpenBoek.
+                            </span>
+                        </span>
+                    </label>
                     <input type="number" name="opening_balance" step="0.01" value="0.00"
-                        class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white w-28">
+                        class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white w-28">
                 </div>
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm transition">
-                    + Add
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                    + Toevoegen
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Recent Transactions -->
-    <h2 class="text-lg font-semibold mb-4">Recent Transactions</h2>
+    {# Recent Transactions #}
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Recente transacties</h2>
     {% if transactions %}
     <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
         <table class="w-full text-sm">
             <thead>
                 <tr class="border-b border-gray-800 bg-gray-900/50">
-                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
-                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Counterparty</th>
-                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Description</th>
-                    <th class="text-right px-4 py-3 text-gray-400 font-medium">Amount</th>
-                    <th class="text-center px-4 py-3 text-gray-400 font-medium">Matched</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Datum</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium hidden md:table-cell">Van/Aan</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Omschrijving</th>
+                    <th class="text-right px-4 py-3 text-gray-400 font-medium">Bedrag</th>
+                    <th class="text-center px-4 py-3 text-gray-400 font-medium">Gematcht</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-800">
                 {% for tx in transactions %}
                 <tr class="hover:bg-gray-800/50">
-                    <td class="px-4 py-2 font-mono text-gray-300">{{ tx.date }}</td>
-                    <td class="px-4 py-2">{{ tx.counterparty_name or '—' }}</td>
-                    <td class="px-4 py-2 text-gray-400 truncate max-w-xs">{{ tx.description or '—' }}</td>
-                    <td class="px-4 py-2 text-right font-mono {% if tx.amount >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                    <td class="px-4 py-2.5 font-mono text-gray-300 text-xs">{{ tx.date.strftime('%d-%m-%Y') if tx.date else tx.date }}</td>
+                    <td class="px-4 py-2.5 hidden md:table-cell">{{ tx.counterparty_name or '—' }}</td>
+                    <td class="px-4 py-2.5 text-gray-400 truncate max-w-xs">{{ tx.description or '—' }}</td>
+                    <td class="px-4 py-2.5 text-right font-mono {% if tx.amount >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
                         €{{ "{:,.2f}".format(tx.amount) }}
                     </td>
-                    <td class="px-4 py-2 text-center">
+                    <td class="px-4 py-2.5 text-center">
                         {% if tx.matched_entry_id %}
                         <span class="text-green-400">✓</span>
                         {% else %}
-                        <span class="text-yellow-400">—</span>
+                        <span class="text-yellow-400 text-xs">niet gematcht</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -100,8 +126,13 @@
         </table>
     </div>
     {% else %}
-    <div class="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
-        <p class="text-gray-400">No transactions imported yet.</p>
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-12 text-center">
+        <p class="text-4xl mb-4">📥</p>
+        <h2 class="text-lg font-semibold mb-2">{{ t('empty.banking') }}</h2>
+        <p class="text-gray-500 text-sm mb-4">Importeer een MT940 of CSV bankafschrift om je transacties automatisch in te laden.</p>
+        <a href="/entities/{{ entity.id }}/banking/import" class="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
+            📥 Eerste import →
+        </a>
     </div>
     {% endif %}
 </div>

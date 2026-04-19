@@ -2,6 +2,20 @@
 
 {% block title %}📸 {{ t('scanner.title') }} — OpenBoek{% endblock %}
 
+{% block breadcrumbs %}
+<nav class="px-4 md:px-8 pt-4 text-sm">
+    <ol class="flex items-center gap-2 text-gray-500">
+        <li><a href="/dashboard" class="hover:text-white transition">Home</a></li>
+        <li>/</li>
+        {% if entity is defined and entity %}
+        <li><a href="/entities/{{ entity.id }}" class="hover:text-white transition">{{ entity.name }}</a></li>
+        <li>/</li>
+        {% endif %}
+        <li class="text-gray-300">Bonnetjes scannen</li>
+    </ol>
+</nav>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-lg mx-auto">
     <h1 class="text-2xl font-bold text-green-400 mb-6">📸 {{ t('scanner.title') }}</h1>

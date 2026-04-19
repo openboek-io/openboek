@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import date, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from openboek.accounting.models import (
@@ -27,6 +28,25 @@ router = APIRouter(tags=["dashboard"])
 def _templates():
     from openboek.main import templates
     return templates
+
+
+def _next_btw_deadline() -> tuple[date, int]:
+    """Return the next BTW quarterly deadline and days until it."""
+    today = date.today()
+    year = today.year
+    # BTW deadlines: last day of month after quarter end
+    deadlines = [
+        date(year, 4, 30),   # Q1
+        date(year, 7, 31),   # Q2
+        date(year, 10, 31),  # Q3
+        date(year + 1, 1, 31),  # Q4
+    ]
+    for dl in deadlines:
+        if dl >= today:
+            return dl, (dl - today).days
+    # If all passed this year, next year Q1
+    dl = date(year + 1, 4, 30)
+    return dl, (dl - today).days
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
@@ -55,7 +75,6 @@ async def dashboard(
     # Calculate quick stats per entity
     entity_stats = []
     for entity in entities:
-        # Get account balances for assets and liabilities
         lines_result = await session.execute(
             select(
                 Account.account_type,
@@ -89,7 +108,7 @@ async def dashboard(
             elif row.account_type == AccountType.expense:
                 expenses = d - c
 
-        # Count recent entries
+        # Count entries
         recent_result = await session.execute(
             select(func.count(JournalEntry.id))
             .where(JournalEntry.entity_id == entity.id)
@@ -106,7 +125,32 @@ async def dashboard(
             "entry_count": entry_count,
         })
 
-    return _templates().TemplateResponse(request, "dashboard.html", {"entity_stats": entity_stats,
+    # Get recent journal entries across all entities (last 10)
+    recent_entries = []
+    if entities:
+        entity_ids = [e.id for e in entities]
+        recent_q = await session.execute(
+            select(JournalEntry, Entity.name.label("entity_name"))
+            .join(Entity, Entity.id == JournalEntry.entity_id)
+            .where(JournalEntry.entity_id.in_(entity_ids))
+            .order_by(JournalEntry.date.desc(), JournalEntry.created_at.desc())
+            .limit(8)
+        )
+        for row in recent_q:
+            entry = row[0]
+            entry.entity_name = row[1]
+            entry.status = entry.status.value if hasattr(entry.status, 'value') else str(entry.status)
+            recent_entries.append(entry)
+
+    # BTW deadline
+    btw_deadline, btw_days_until = _next_btw_deadline()
+
+    return _templates().TemplateResponse(request, "dashboard.html", {
+        "entity_stats": entity_stats,
+        "recent_entries": recent_entries,
+        "btw_deadline": btw_deadline,
+        "btw_days_until": btw_days_until,
+        "all_entities": entities,
         "user": user,
         "lang": user.preferred_lang,
     })

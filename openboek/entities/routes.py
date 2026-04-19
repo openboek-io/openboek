@@ -1,18 +1,19 @@
-"""Entity management routes — CRUD + relationships."""
+"""Entity management routes — CRUD + relationships + detail overview."""
 
 from __future__ import annotations
 
 import uuid
+from decimal import Decimal
 from pathlib import Path
 
 import yaml
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from openboek.accounting.models import Account, AccountType
+from openboek.accounting.models import Account, AccountType, JournalEntry, JournalLine, JournalStatus
 from openboek.auth.dependencies import get_current_user, get_entity_for_user
 from openboek.auth.models import User
 from openboek.audit.service import log_action
@@ -34,6 +35,21 @@ YAML_DIR = Path(__file__).resolve().parent.parent.parent / "tax_modules" / "nl" 
 def _templates():
     from openboek.main import templates
     return templates
+
+
+async def _get_all_user_entities(user: User, session: AsyncSession) -> list[Entity]:
+    """Get all entities a user has access to."""
+    result = await session.execute(
+        select(Entity).where(Entity.owner_user_id == user.id)
+    )
+    owned = list(result.scalars().all())
+    access_result = await session.execute(
+        select(Entity)
+        .join(EntityAccess, EntityAccess.entity_id == Entity.id)
+        .where(EntityAccess.user_id == user.id)
+    )
+    shared = [e for e in access_result.scalars().all() if e.id not in {o.id for o in owned}]
+    return owned + shared
 
 
 def _provision_accounts_from_yaml(
@@ -85,21 +101,11 @@ async def list_entities(
     session: AsyncSession = Depends(get_session),
 ):
     """List all entities the user has access to."""
-    # Entities owned by user
-    result = await session.execute(
-        select(Entity).where(Entity.owner_user_id == user.id)
-    )
-    owned = list(result.scalars().all())
-    # Entities shared with user
-    access_result = await session.execute(
-        select(Entity)
-        .join(EntityAccess, EntityAccess.entity_id == Entity.id)
-        .where(EntityAccess.user_id == user.id)
-    )
-    shared = [e for e in access_result.scalars().all() if e.id not in {o.id for o in owned}]
-    entities = owned + shared
+    entities = await _get_all_user_entities(user, session)
 
-    return _templates().TemplateResponse(request, "entities/list.html", {"entities": entities,
+    return _templates().TemplateResponse(request, "entities/list.html", {
+        "entities": entities,
+        "all_entities": entities,
         "user": user,
         "lang": user.preferred_lang,
     })
@@ -109,10 +115,14 @@ async def list_entities(
 async def create_entity_form(
     request: Request,
     user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ):
     """Show entity creation form."""
-    return _templates().TemplateResponse(request, "entities/form.html", {"entity": None,
+    all_entities = await _get_all_user_entities(user, session)
+    return _templates().TemplateResponse(request, "entities/form.html", {
+        "entity": None,
         "entity_types": list(EntityType),
+        "all_entities": all_entities,
         "user": user,
         "error": None,
         "lang": user.preferred_lang,
@@ -168,10 +178,85 @@ async def view_entity(
     request: Request,
     entity: Entity = Depends(get_entity_for_user),
     user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ):
-    """View/edit entity details."""
-    return _templates().TemplateResponse(request, "entities/form.html", {"entity": entity,
+    """Entity detail/overview page with stats and recent activity."""
+    all_entities = await _get_all_user_entities(user, session)
+
+    # Calculate financial stats
+    lines_result = await session.execute(
+        select(
+            Account.account_type,
+            func.sum(JournalLine.debit).label("total_debit"),
+            func.sum(JournalLine.credit).label("total_credit"),
+        )
+        .join(JournalLine, JournalLine.account_id == Account.id)
+        .join(JournalEntry, JournalEntry.id == JournalLine.entry_id)
+        .where(
+            Account.entity_id == entity.id,
+            JournalEntry.status.in_([JournalStatus.posted, JournalStatus.locked]),
+        )
+        .group_by(Account.account_type)
+    )
+    rows = list(lines_result.all())
+
+    assets = Decimal("0.00")
+    liabilities = Decimal("0.00")
+    revenue = Decimal("0.00")
+    expenses = Decimal("0.00")
+
+    for row in rows:
+        d = row.total_debit or Decimal("0.00")
+        c = row.total_credit or Decimal("0.00")
+        if row.account_type == AccountType.asset:
+            assets = d - c
+        elif row.account_type == AccountType.liability:
+            liabilities = c - d
+        elif row.account_type == AccountType.revenue:
+            revenue = c - d
+        elif row.account_type == AccountType.expense:
+            expenses = d - c
+
+    stats = {
+        "assets": assets,
+        "liabilities": liabilities,
+        "revenue": revenue,
+        "expenses": expenses,
+        "profit": revenue - expenses,
+    }
+
+    # Recent journal entries
+    recent_result = await session.execute(
+        select(JournalEntry)
+        .where(JournalEntry.entity_id == entity.id)
+        .order_by(JournalEntry.date.desc(), JournalEntry.created_at.desc())
+        .limit(8)
+    )
+    recent_entries = list(recent_result.scalars().all())
+
+    return _templates().TemplateResponse(request, "entities/detail.html", {
+        "entity": entity,
+        "stats": stats,
+        "recent_entries": recent_entries,
+        "all_entities": all_entities,
+        "user": user,
+        "lang": user.preferred_lang,
+    })
+
+
+@router.get("/{entity_id}/edit", response_class=HTMLResponse)
+async def edit_entity_form(
+    request: Request,
+    entity: Entity = Depends(get_entity_for_user),
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Show entity edit form."""
+    all_entities = await _get_all_user_entities(user, session)
+    return _templates().TemplateResponse(request, "entities/form.html", {
+        "entity": entity,
         "entity_types": list(EntityType),
+        "all_entities": all_entities,
         "user": user,
         "error": None,
         "lang": user.preferred_lang,
@@ -220,6 +305,7 @@ async def entity_relationships(
 ):
     """Manage entity relationships."""
     entity = await get_entity_for_user(entity_id, user, session)
+    all_entities = await _get_all_user_entities(user, session)
 
     result = await session.execute(
         select(EntityRelationship).where(
@@ -229,13 +315,8 @@ async def entity_relationships(
     )
     relationships = list(result.scalars().all())
 
-    # Get all user's entities for the dropdown
-    entities_result = await session.execute(
-        select(Entity).where(Entity.owner_user_id == user.id)
-    )
-    all_entities = list(entities_result.scalars().all())
-
-    return _templates().TemplateResponse(request, "entities/relationships.html", {"entity": entity,
+    return _templates().TemplateResponse(request, "entities/relationships.html", {
+        "entity": entity,
         "relationships": relationships,
         "all_entities": all_entities,
         "relationship_types": list(RelationshipType),
