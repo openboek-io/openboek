@@ -90,6 +90,22 @@
         </table>
     </div>
 
+    <!-- Source Document -->
+    {% if source_doc %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold">📄 Brondocument</h2>
+            <a href="/entities/{{ entity.id }}/upload/doc/{{ source_doc.id }}" 
+               class="text-sm text-green-400 hover:underline">Bekijk details →</a>
+        </div>
+        <div class="bg-gray-950 rounded-lg overflow-hidden" style="height: 600px;">
+            <iframe src="/entities/{{ entity.id }}/upload/file/{{ source_doc.id }}" 
+                    class="w-full h-full" frameborder="0"></iframe>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">{{ source_doc.original_filename }}</p>
+    </div>
+    {% endif %}
+
     <!-- Actions -->
     <div class="flex gap-3">
         {% if entry.status.value == 'draft' %}

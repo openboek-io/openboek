@@ -91,8 +91,25 @@ async def process_scan_document(
     # 1. Run OCR
     await _update_doc_status(session, doc_id, "pending", ocr_status="processing")
 
-    with open(path, "rb") as f:
-        image_b64 = base64.b64encode(f.read()).decode("utf-8")
+    # Convert PDF to image first (minicpm-v needs images, not raw PDFs)
+    if path.suffix.lower() == ".pdf":
+        import subprocess
+        img_path = path.with_suffix(".png")
+        try:
+            subprocess.run(
+                ["pdftoppm", "-png", "-f", "1", "-l", "1", "-r", "200", "-singlefile", str(path), str(img_path.with_suffix(""))],
+                check=True, capture_output=True, timeout=30,
+            )
+            with open(img_path, "rb") as f:
+                image_b64 = base64.b64encode(f.read()).decode("utf-8")
+            img_path.unlink(missing_ok=True)
+        except Exception as e:
+            logger.warning("PDF conversion failed for %s: %s — trying raw", doc_id, e)
+            with open(path, "rb") as f:
+                image_b64 = base64.b64encode(f.read()).decode("utf-8")
+    else:
+        with open(path, "rb") as f:
+            image_b64 = base64.b64encode(f.read()).decode("utf-8")
 
     ocr_result = await _run_ocr(image_b64)
     ocr_error = ocr_result.get("error")

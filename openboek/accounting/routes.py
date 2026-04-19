@@ -8,7 +8,7 @@ from decimal import Decimal, InvalidOperation
 
 from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import text, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -242,9 +242,21 @@ async def journal_view(
     )
     accounts = list(accounts_result.scalars().all())
 
+    # Find linked source document (if any)
+    source_doc = None
+    try:
+        doc_result = await session.execute(
+            text("SELECT id, original_filename, storage_path FROM documents WHERE journal_entry_id = :jid LIMIT 1"),
+            {"jid": str(entry_id)},
+        )
+        source_doc = doc_result.mappings().first()
+    except Exception:
+        pass
+
     return _templates().TemplateResponse(request, "accounting/journal_detail.html", {"entity": entity,
         "entry": entry,
         "accounts": accounts,
+        "source_doc": source_doc,
         "user": user,
         "lang": user.preferred_lang,
     })
