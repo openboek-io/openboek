@@ -464,7 +464,7 @@ async def serve_file(
         return JSONResponse({"error": "not found"}, status_code=404)
 
     from fastapi.responses import FileResponse
-    return FileResponse(doc.storage_path, media_type=doc.mime_type or "application/octet-stream")
+    return FileResponse("/home/nano/openboek/uploads/" + doc.storage_path, media_type=doc.mime_type or "application/octet-stream")
 
 
 # ---------------------------------------------------------------------------

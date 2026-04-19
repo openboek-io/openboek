@@ -91,27 +91,45 @@ async def process_scan_document(
     # 1. Run OCR
     await _update_doc_status(session, doc_id, "pending", ocr_status="processing")
 
-    # Convert PDF to image first (minicpm-v needs images, not raw PDFs)
+    # Strategy: pdftotext first (fast, accurate for digital PDFs), vision OCR as fallback
+    ocr_result = None
     if path.suffix.lower() == ".pdf":
         import subprocess
-        img_path = path.with_suffix(".png")
         try:
-            subprocess.run(
-                ["pdftoppm", "-png", "-f", "1", "-l", "1", "-r", "200", "-singlefile", str(path), str(img_path.with_suffix(""))],
-                check=True, capture_output=True, timeout=30,
+            text_result = subprocess.run(
+                ["pdftotext", str(path), "-"],
+                capture_output=True, text=True, timeout=30,
             )
-            with open(img_path, "rb") as f:
-                image_b64 = base64.b64encode(f.read()).decode("utf-8")
-            img_path.unlink(missing_ok=True)
+            extracted_text = text_result.stdout.strip()
+            # If we got meaningful text (>50 chars), use text-based extraction via LLM
+            if len(extracted_text) > 50:
+                logger.info("Using pdftotext for %s (%d chars)", doc_id, len(extracted_text))
+                ocr_result = await _run_text_extraction(extracted_text)
         except Exception as e:
-            logger.warning("PDF conversion failed for %s: %s — trying raw", doc_id, e)
+            logger.warning("pdftotext failed for %s: %s", doc_id, e)
+
+    # Fallback: vision OCR for scanned docs or if text extraction failed
+    if ocr_result is None or ocr_result.get("error"):
+        logger.info("Falling back to vision OCR for %s", doc_id)
+        if path.suffix.lower() == ".pdf":
+            import subprocess
+            img_path = path.with_suffix(".png")
+            try:
+                subprocess.run(
+                    ["pdftoppm", "-png", "-f", "1", "-l", "1", "-r", "200", "-singlefile", str(path), str(img_path.with_suffix(""))],
+                    check=True, capture_output=True, timeout=30,
+                )
+                with open(img_path, "rb") as f:
+                    image_b64 = base64.b64encode(f.read()).decode("utf-8")
+                img_path.unlink(missing_ok=True)
+            except Exception as e:
+                logger.warning("PDF conversion failed for %s: %s", doc_id, e)
+                with open(path, "rb") as f:
+                    image_b64 = base64.b64encode(f.read()).decode("utf-8")
+        else:
             with open(path, "rb") as f:
                 image_b64 = base64.b64encode(f.read()).decode("utf-8")
-    else:
-        with open(path, "rb") as f:
-            image_b64 = base64.b64encode(f.read()).decode("utf-8")
-
-    ocr_result = await _run_ocr(image_b64)
+        ocr_result = await _run_ocr(image_b64)
     ocr_error = ocr_result.get("error")
 
     if ocr_error:
@@ -336,6 +354,61 @@ async def process_bank_transactions(
         )
 
     return {"auto_processed": auto_count, "needs_review": review_count, "failed": failed_count}
+
+
+async def _run_text_extraction(text: str) -> dict[str, Any]:
+    """Extract invoice data from PDF text using LLM (Gemma 4 on node3)."""
+    import httpx
+
+    prompt = f"""Analyseer deze factuur-tekst en extraheer ALLE details.
+Antwoord ALLEEN in JSON (geen uitleg, geen markdown):
+{{
+  "document_type": "sales_invoice|purchase_invoice|receipt|credit_note|other",
+  "invoice_number": null,
+  "invoice_date": "YYYY-MM-DD",
+  "due_date": null,
+  "vendor_name": null,
+  "vendor_kvk": null,
+  "vendor_btw_number": null,
+  "vendor_iban": null,
+  "customer_name": null,
+  "total_incl": 0.00,
+  "subtotal_excl": 0.00,
+  "btw_amounts": {{"21": 0.00, "9": 0.00, "0": 0.00}},
+  "line_items": [{{"description": "", "quantity": null, "unit_price": 0.00, "btw_rate": 21, "amount": 0.00}}],
+  "payment_status": null,
+  "currency": "EUR",
+  "confidence": 0.95,
+  "category_hint": "",
+  "from_entity": null,
+  "to_entity": null
+}}
+
+Belangrijk:
+- Bedragen: gebruik punt als decimaalteken (88.27 niet 88,27)
+- Lees het EXACTE bedrag van de factuur, niet een geschat bedrag
+- Kijk naar "Totaalprijs incl. BTW" of "Total" voor het totaalbedrag
+
+FACTUUR TEKST:
+{text[:3000]}"""
+
+    try:
+        async with httpx.AsyncClient(timeout=120) as client:
+            resp = await client.post(
+                f"{settings.ollama_url}/api/generate",
+                json={
+                    "model": settings.ollama_model,
+                    "prompt": prompt,
+                    "stream": False,
+                },
+                timeout=120,
+            )
+            if resp.status_code != 200:
+                return {"error": f"LLM returned status {resp.status_code}"}
+            raw = resp.json().get("response", "")
+            return _parse_ocr_json(raw)
+    except httpx.ConnectError:
+        return {"error": "LLM service unavailable"}
 
 
 async def _run_ocr(image_b64: str) -> dict[str, Any]:
