@@ -133,6 +133,69 @@ async def scanner_upload(
     })
 
 
+@router.get("/entities/{entity_id}/scanner/status/{file_id}")
+async def scanner_ocr_status(
+    request: Request,
+    entity_id: uuid.UUID,
+    file_id: str,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Check OCR processing status (polled by HTMX)."""
+    entity = await get_entity_for_user(entity_id, user, session)
+
+    result = await session.execute(
+        __import__("sqlalchemy").text(
+            "SELECT ocr_status, ocr_result FROM receipt_files WHERE id = :id"
+        ),
+        {"id": uuid.UUID(file_id)},
+    )
+    row = result.one_or_none()
+    if not row:
+        return {"status": "not_found"}
+
+    if row.ocr_status == "done":
+        ocr_result = json.loads(row.ocr_result) if row.ocr_result else {}
+
+        # Get accounts for category assignment
+        accounts_result = await session.execute(
+            select(Account).where(Account.entity_id == entity_id).order_by(Account.code)
+        )
+        accounts = list(accounts_result.scalars().all())
+
+        return _templates().TemplateResponse("scanner/review.html", {
+            "request": request,
+            "entity": entity,
+            "user": user,
+            "lang": user.preferred_lang,
+            "ocr_result": ocr_result,
+            "ocr_error": None,
+            "file_id": file_id,
+            "accounts": accounts,
+        })
+    elif row.ocr_status == "failed":
+        ocr_result = json.loads(row.ocr_result) if row.ocr_result else {}
+        return _templates().TemplateResponse("scanner/review.html", {
+            "request": request,
+            "entity": entity,
+            "user": user,
+            "lang": user.preferred_lang,
+            "ocr_result": ocr_result,
+            "ocr_error": ocr_result.get("error", "OCR processing failed"),
+            "file_id": file_id,
+            "accounts": [],
+        })
+    else:
+        # Still processing — return partial for HTMX polling
+        return _templates().TemplateResponse("scanner/processing.html", {
+            "request": request,
+            "entity": entity,
+            "user": user,
+            "lang": user.preferred_lang,
+            "file_id": file_id,
+        })
+
+
 @router.post("/entities/{entity_id}/scanner/confirm", response_class=HTMLResponse)
 async def scanner_confirm(
     request: Request,

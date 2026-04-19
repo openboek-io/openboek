@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Processing Receipt — OpenBoek{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-16 text-center"
+     hx-get="/entities/{{ entity.id }}/scanner/status/{{ file_id }}"
+     hx-trigger="every 3s"
+     hx-swap="outerHTML"
+     hx-target="body">
+    <div class="animate-spin inline-block w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full mb-6"></div>
+    <h2 class="text-xl font-bold mb-2">Processing receipt…</h2>
+    <p class="text-gray-400">OCR is running in the background. This page will update automatically.</p>
+    <p class="text-sm text-gray-500 mt-4">File ID: {{ file_id }}</p>
+</div>
+{% endblock %}

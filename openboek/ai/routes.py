@@ -186,12 +186,17 @@ async def ai_generate_insights(
     if not entity_id:
         return {"error": "entity_id required"}
 
-    from openboek.ai.advisor import run_advisor
+    from openboek.tasks.queue import enqueue
 
-    insights = await run_advisor(
-        session, uuid.UUID(entity_id), user_id=user.id
+    task = await enqueue(
+        session,
+        task_type="ai_insights",
+        payload={
+            "entity_id": entity_id,
+            "user_id": str(user.id),
+        },
     )
-    return {"generated": len(insights)}
+    return {"queued": True, "task_id": str(task.id)}
 
 
 @router.post("/insights/{insight_id}/dismiss")
