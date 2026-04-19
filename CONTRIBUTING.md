@@ -136,4 +136,4 @@ By contributing, you agree that your contributions will be licensed under the [A
 
 ## 💬 Questions?
 
-Open a [discussion](https://github.com/openboek/openboek/discussions) or an issue. We're happy to help you get started.
+Open a [discussion](https://github.com/openboek-io/openboek/discussions) or an issue. We're happy to help you get started.

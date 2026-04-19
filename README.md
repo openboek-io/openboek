@@ -56,7 +56,7 @@ While built Dutch-first, the architecture is designed around pluggable **tax mod
 ### Docker Compose (recommended)
 
 ```bash
-git clone https://github.com/openboek/openboek.git
+git clone https://github.com/openboek-io/openboek.git
 cd openboek
 cp .env.example .env
 # Edit .env — at minimum set a real SECRET_KEY
@@ -74,7 +74,7 @@ docker compose exec db psql -U openboek -d openboek -f /dev/stdin < migrations/0
 ### Bare metal
 
 ```bash
-git clone https://github.com/openboek/openboek.git
+git clone https://github.com/openboek-io/openboek.git
 cd openboek
 
 # Create virtual environment
