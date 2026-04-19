@@ -1,0 +1,56 @@
+{% extends "wizard/base.html" %}
+{% block title %}Welcome — OpenBoek{% endblock %}
+
+{% block wizard_content %}
+<div class="text-center mb-12 mt-8">
+    <div class="text-6xl mb-6">📗</div>
+    <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">
+        {% if lang == 'en' %}Welcome to OpenBoek!{% else %}Welkom bij OpenBoek!{% endif %}
+    </h1>
+    <p class="text-lg text-gray-400 max-w-lg mx-auto">
+        {% if lang == 'en' %}
+        Let's set up your bookkeeping together. It takes about 3 minutes. No accounting knowledge needed — we'll explain everything along the way.
+        {% else %}
+        Laten we samen je boekhouding opzetten. Het duurt ongeveer 3 minuten. Geen boekhoudkennis nodig — we leggen alles uit onderweg.
+        {% endif %}
+    </p>
+</div>
+
+<form method="POST" action="/wizard" class="space-y-8">
+    <input type="hidden" name="step" value="welcome">
+
+    <div class="bg-gray-900 rounded-xl p-6 border border-gray-800">
+        <label class="block text-sm font-medium text-gray-300 mb-4">
+            {% if lang == 'en' %}Choose your language{% else %}Kies je taal{% endif %}
+        </label>
+        <div class="grid grid-cols-2 gap-3">
+            <label class="relative cursor-pointer">
+                <input type="radio" name="language" value="nl" class="peer sr-only"
+                       {% if not wizard.language or wizard.language == 'nl' %}checked{% endif %}>
+                <div class="flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-gray-700 
+                            peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition">
+                    <span class="text-2xl">🇳🇱</span>
+                    <span class="font-medium">Nederlands</span>
+                </div>
+            </label>
+            <label class="relative cursor-pointer">
+                <input type="radio" name="language" value="en" class="peer sr-only"
+                       {% if wizard.language == 'en' %}checked{% endif %}>
+                <div class="flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-gray-700 
+                            peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition">
+                    <span class="text-2xl">🇬🇧</span>
+                    <span class="font-medium">English</span>
+                </div>
+            </label>
+        </div>
+    </div>
+
+    <div class="flex justify-end">
+        <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-8 rounded-lg transition flex items-center gap-2">
+            {% if lang == 'en' %}Let's go{% else %}Laten we beginnen{% endif %}
+            <span>→</span>
+        </button>
+    </div>
+</form>
+{% endblock %}

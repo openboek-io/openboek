@@ -1,0 +1,144 @@
+{% extends "wizard/base.html" %}
+{% block title %}{% if lang == 'en' %}Business Details{% else %}Bedrijfsgegevens{% endif %} — OpenBoek{% endblock %}
+
+{% block wizard_content %}
+<div class="mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">
+        {% if lang == 'en' %}Your business details{% else %}Je bedrijfsgegevens{% endif %}
+    </h1>
+    <p class="text-gray-400">
+        {% if lang == 'en' %}
+        We need a few details to set up your chart of accounts correctly. You can update these later.
+        {% else %}
+        We hebben een paar gegevens nodig om je grootboek correct in te richten. Je kunt dit later aanpassen.
+        {% endif %}
+    </p>
+</div>
+
+<form method="POST" action="/wizard" class="space-y-6">
+    <input type="hidden" name="step" value="business">
+
+    {% set work = wizard.work_situation or [] %}
+
+    {% if 'zzp' in work %}
+    <div class="bg-gray-900 rounded-xl p-6 border border-gray-800 space-y-4">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="text-xl">🔧</span>
+            <h2 class="text-lg font-semibold text-white">
+                {% if lang == 'en' %}Sole Proprietorship (ZZP){% else %}Eenmanszaak (ZZP){% endif %}
+            </h2>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">
+                {% if lang == 'en' %}Business name{% else %}Bedrijfsnaam{% endif %}
+            </label>
+            <input type="text" name="zzp_name"
+                   value="{{ wizard.zzp_name|default('') }}"
+                   placeholder="{% if lang == 'en' %}e.g. Ignacio Consulting{% else %}bijv. Ignacio Consulting{% endif %}"
+                   class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white 
+                          focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    {% if lang == 'en' %}KvK number{% else %}KvK-nummer{% endif %}
+                    <span class="text-gray-500">({% if lang == 'en' %}optional{% else %}optioneel{% endif %})</span>
+                </label>
+                <input type="text" name="zzp_kvk"
+                       value="{{ wizard.zzp_kvk|default('') }}"
+                       placeholder="12345678" pattern="[0-9]{8}" maxlength="8"
+                       class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white 
+                              focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
+                <p class="text-xs text-gray-500 mt-1">{% if lang == 'en' %}8 digits{% else %}8 cijfers{% endif %}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    {% if lang == 'en' %}BTW number{% else %}BTW-nummer{% endif %}
+                    <span class="text-gray-500">({% if lang == 'en' %}optional{% else %}optioneel{% endif %})</span>
+                </label>
+                <input type="text" name="zzp_btw_number"
+                       value="{{ wizard.zzp_btw_number|default('') }}"
+                       placeholder="NL000000000B00"
+                       class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white 
+                              focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
+                <p class="text-xs text-gray-500 mt-1">{% if lang == 'en' %}Format: NL000000000B00{% else %}Formaat: NL000000000B00{% endif %}</p>
+            </div>
+        </div>
+
+        <!-- Info box -->
+        <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+            <p class="text-sm text-gray-400">
+                💡 {% if lang == 'en' %}
+                Don't have these numbers yet? No problem — you can add them later in settings. 
+                The KvK number is from your Chamber of Commerce registration, the BTW number from the Belastingdienst.
+                {% else %}
+                Heb je deze nummers nog niet? Geen probleem — je kunt ze later toevoegen in de instellingen. 
+                Het KvK-nummer komt van je Kamer van Koophandel-inschrijving, het BTW-nummer van de Belastingdienst.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if 'bv' in work %}
+    <div class="bg-gray-900 rounded-xl p-6 border border-gray-800 space-y-4">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="text-xl">🏢</span>
+            <h2 class="text-lg font-semibold text-white">
+                {% if lang == 'en' %}BV (Private Limited Company){% else %}BV (Besloten Vennootschap){% endif %}
+            </h2>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">
+                {% if lang == 'en' %}BV name{% else %}Naam van de BV{% endif %}
+            </label>
+            <input type="text" name="bv_name" required
+                   value="{{ wizard.bv_name|default('') }}"
+                   placeholder="{% if lang == 'en' %}e.g. My Company B.V.{% else %}bijv. Mijn Bedrijf B.V.{% endif %}"
+                   class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white 
+                          focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    {% if lang == 'en' %}KvK number{% else %}KvK-nummer{% endif %}
+                    <span class="text-gray-500">({% if lang == 'en' %}optional{% else %}optioneel{% endif %})</span>
+                </label>
+                <input type="text" name="bv_kvk"
+                       value="{{ wizard.bv_kvk|default('') }}"
+                       placeholder="12345678" pattern="[0-9]{8}" maxlength="8"
+                       class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white 
+                              focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    {% if lang == 'en' %}BTW number{% else %}BTW-nummer{% endif %}
+                    <span class="text-gray-500">({% if lang == 'en' %}optional{% else %}optioneel{% endif %})</span>
+                </label>
+                <input type="text" name="bv_btw_number"
+                       value="{{ wizard.bv_btw_number|default('') }}"
+                       placeholder="NL000000000B00"
+                       class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white 
+                              focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Navigation -->
+    <div class="flex justify-between">
+        <a href="/wizard?step=work"
+           class="text-gray-400 hover:text-white py-3 px-6 rounded-lg transition flex items-center gap-2">
+            <span>←</span> {% if lang == 'en' %}Back{% else %}Terug{% endif %}
+        </a>
+        <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-8 rounded-lg transition flex items-center gap-2">
+            {% if lang == 'en' %}Next{% else %}Volgende{% endif %} <span>→</span>
+        </button>
+    </div>
+</form>
+{% endblock %}

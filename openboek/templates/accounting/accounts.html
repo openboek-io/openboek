@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Chart of Accounts — {{ entity.name }} — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold">📋 Chart of Accounts</h1>
+        <span class="text-sm text-gray-400">{{ entity.name }}</span>
+    </div>
+
+    {% if accounts %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-800 bg-gray-900/50">
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Code</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Name</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Type</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">BTW</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800">
+                {% for account in accounts %}
+                <tr class="hover:bg-gray-800/50">
+                    <td class="px-4 py-2 font-mono text-green-400">
+                        {% if account.parent_id %}&nbsp;&nbsp;{% endif %}{{ account.code }}
+                    </td>
+                    <td class="px-4 py-2">
+                        {% if lang == 'en' %}{{ account.name_en }}{% else %}{{ account.name_nl }}{% endif %}
+                        {% if account.is_system %}<span class="text-xs text-gray-500 ml-1">(system)</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-2">
+                        <span class="text-xs px-2 py-0.5 rounded
+                            {% if account.account_type.value == 'asset' %}bg-blue-900/50 text-blue-400
+                            {% elif account.account_type.value == 'liability' %}bg-orange-900/50 text-orange-400
+                            {% elif account.account_type.value == 'equity' %}bg-purple-900/50 text-purple-400
+                            {% elif account.account_type.value == 'revenue' %}bg-green-900/50 text-green-400
+                            {% elif account.account_type.value == 'expense' %}bg-red-900/50 text-red-400
+                            {% endif %}">
+                            {{ t('account_type.' + account.account_type.value) }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-2 text-gray-400">{{ account.btw_code or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
+        <p class="text-gray-400">No accounts configured. Create the entity with a template to auto-provision accounts.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

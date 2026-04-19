@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}✅ {{ t('verification.title') }} — OpenBoek{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-green-400">✅ {{ t('verification.title') }}</h1>
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-400">
+                {% if period_type == 'btw_q' %}BTW Q{{ quarter }}{% else %}{{ period_type|upper }}{% endif %} {{ year }}
+            </span>
+            <!-- Period selector -->
+            <form method="get" class="flex items-center gap-2">
+                <input type="hidden" name="period_type" value="{{ period_type }}" />
+                <select name="year" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-300">
+                    {% for y in range(year - 2, year + 1) %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+                <select name="quarter" class="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-gray-300">
+                    {% for q in range(1, 5) %}
+                    <option value="{{ q }}" {% if q == quarter %}selected{% endif %}>Q{{ q }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="text-sm px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition">
+                    {{ t('verification.load') }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Three-panel layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Panel 1: Automated Checks -->
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-5">
+            <h2 class="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                📊 {{ t('verification.automated_checks') }}
+                {% if automated.all_passed %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-green-900/50 text-green-400 border border-green-800">✅ {{ t('verification.all_pass') }}</span>
+                {% else %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-red-900/50 text-red-400 border border-red-800">❌ {{ automated.error_count }} {{ t('verification.errors') }}</span>
+                {% endif %}
+            </h2>
+            <div class="space-y-3">
+                {% for check in automated.checks %}
+                <div class="flex items-start gap-3 p-3 rounded-lg {% if check.passed %}bg-green-900/20{% elif check.severity == 'error' %}bg-red-900/20{% else %}bg-yellow-900/20{% endif %}">
+                    <span class="flex-shrink-0 mt-0.5">
+                        {% if check.passed %}✅{% elif check.severity == 'error' %}❌{% else %}⚠️{% endif %}
+                    </span>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium {% if check.passed %}text-green-300{% elif check.severity == 'error' %}text-red-300{% else %}text-yellow-300{% endif %}">
+                            {% if lang == 'nl' %}{{ check.name_nl }}{% else %}{{ check.name_en }}{% endif %}
+                        </div>
+                        <div class="text-xs text-gray-400 mt-1">
+                            {% if lang == 'nl' %}{{ check.detail_nl }}{% else %}{{ check.detail_en }}{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Panel 2: AI Review -->
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-5">
+            <h2 class="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                💬 {{ t('verification.ai_review') }}
+                {% if ai_review.available %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-blue-900/50 text-blue-400 border border-blue-800">
+                    {{ t('verification.confidence') }}: {{ ai_review.confidence }}
+                </span>
+                {% else %}
+                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400">{{ t('ai.offline') }}</span>
+                {% endif %}
+            </h2>
+
+            {% if not ai_review.available %}
+            <div class="text-sm text-gray-500 p-3 bg-gray-900 rounded-lg">
+                {{ t('verification.ai_unavailable') }}
+            </div>
+            {% else %}
+            <div class="space-y-3">
+                {% if ai_review.issues %}
+                <div class="text-xs font-semibold uppercase text-gray-500 mb-1">{{ t('verification.issues') }}</div>
+                {% for issue in ai_review.issues %}
+                <div class="p-3 rounded-lg {% if issue.severity == 'block' %}bg-red-900/20{% elif issue.severity == 'warning' %}bg-yellow-900/20{% else %}bg-blue-900/20{% endif %}">
+                    <div class="text-sm {% if issue.severity == 'block' %}text-red-300{% elif issue.severity == 'warning' %}text-yellow-300{% else %}text-blue-300{% endif %}">
+                        {% if issue.severity == 'block' %}🚫{% elif issue.severity == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+                        {{ issue.text }}
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                {% if ai_review.suggestions %}
+                <div class="text-xs font-semibold uppercase text-gray-500 mb-1 mt-4">{{ t('verification.suggestions') }}</div>
+                {% for s in ai_review.suggestions %}
+                <div class="p-3 rounded-lg bg-green-900/20">
+                    <div class="text-sm text-green-300">💡 {{ s.text }}</div>
+                    {% if s.impact %}<div class="text-xs text-gray-400 mt-1">{{ t('ai.estimated_impact') }}: {{ s.impact }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                {% if ai_review.risk_flags %}
+                <div class="text-xs font-semibold uppercase text-gray-500 mb-1 mt-4">{{ t('verification.risk_flags') }}</div>
+                {% for r in ai_review.risk_flags %}
+                <div class="p-3 rounded-lg bg-orange-900/20">
+                    <div class="text-sm text-orange-300">🔍 {{ r.text }}</div>
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                {% if not ai_review.issues and not ai_review.suggestions and not ai_review.risk_flags %}
+                <div class="text-sm text-gray-400 p-3 bg-gray-900 rounded-lg">
+                    {{ t('verification.ai_no_findings') }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Panel 3: Human Sign-Off -->
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-5">
+            <h2 class="text-lg font-medium text-white mb-4">
+                ✍️ {{ t('verification.signoff_title') }}
+            </h2>
+
+            {% if signoff and signoff.status == 'signed_off' %}
+            <div class="bg-green-900/30 border border-green-800 rounded-lg p-4 mb-4">
+                <div class="text-green-300 font-medium mb-1">✅ {{ t('verification.signed_off') }}</div>
+                <div class="text-xs text-gray-400">
+                    {{ signoff.signoff_at }}
+                </div>
+                {% if signoff.notes %}
+                <div class="text-sm text-gray-300 mt-2">{{ signoff.notes }}</div>
+                {% endif %}
+            </div>
+            {% elif can_signoff %}
+            <form action="/entities/{{ entity.id }}/verification/signoff" method="post">
+                <input type="hidden" name="period_type" value="{{ period_type }}" />
+                <input type="hidden" name="year" value="{{ year }}" />
+                <input type="hidden" name="quarter" value="{{ quarter }}" />
+
+                <div class="mb-4">
+                    <p class="text-sm text-gray-300 mb-3">{{ t('verification.signoff_desc') }}</p>
+                    <textarea name="notes" rows="3" placeholder="{{ t('verification.notes_placeholder') }}"
+                              class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:ring-green-500 focus:border-green-500"></textarea>
+                </div>
+
+                <label class="flex items-start gap-3 mb-4 cursor-pointer">
+                    <input type="checkbox" required class="mt-1 rounded bg-gray-900 border-gray-600 text-green-500 focus:ring-green-500" />
+                    <span class="text-sm text-gray-300">{{ t('verification.confirm_checkbox') }}</span>
+                </label>
+
+                <button type="submit"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition">
+                    ✍️ {{ t('verification.sign_off_btn') }}
+                </button>
+            </form>
+            {% else %}
+            <div class="bg-yellow-900/30 border border-yellow-800 rounded-lg p-4">
+                <p class="text-yellow-300 text-sm">{{ t('verification.cannot_signoff') }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

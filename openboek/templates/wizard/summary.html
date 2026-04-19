@@ -1,0 +1,188 @@
+{% extends "wizard/base.html" %}
+{% block title %}{% if lang == 'en' %}Summary{% else %}Samenvatting{% endif %} — OpenBoek{% endblock %}
+
+{% block wizard_content %}
+<div class="mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">
+        {% if lang == 'en' %}Does this look right?{% else %}Klopt dit?{% endif %}
+    </h1>
+    <p class="text-gray-400">
+        {% if lang == 'en' %}
+        Here's what we'll set up for you. Review everything and click any section to make changes.
+        {% else %}
+        Dit gaan we voor je instellen. Controleer alles en klik op een sectie om wijzigingen te maken.
+        {% endif %}
+    </p>
+</div>
+
+<form method="POST" action="/wizard" class="space-y-6">
+    <input type="hidden" name="step" value="summary">
+
+    {% set work = wizard.work_situation or [] %}
+
+    <!-- Account -->
+    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-gray-800">
+            <h3 class="font-medium text-white flex items-center gap-2">
+                <span>👤</span> {% if lang == 'en' %}Account{% else %}Account{% endif %}
+            </h3>
+            <a href="/wizard?step=account" class="text-green-400 hover:text-green-300 text-sm">
+                {% if lang == 'en' %}Edit{% else %}Bewerken{% endif %} ✏️
+            </a>
+        </div>
+        <div class="p-4 text-sm text-gray-300 space-y-1">
+            <p><span class="text-gray-500">{% if lang == 'en' %}Username:{% else %}Gebruikersnaam:{% endif %}</span> {{ wizard.username }}</p>
+            {% if wizard.email %}<p><span class="text-gray-500">Email:</span> {{ wizard.email }}</p>{% endif %}
+            <p><span class="text-gray-500">{% if lang == 'en' %}Name:{% else %}Naam:{% endif %}</span> {{ wizard.display_name }}</p>
+            {% if wizard.has_partner %}
+            <p><span class="text-gray-500">{% if lang == 'en' %}Fiscal partner:{% else %}Fiscaal partner:{% endif %}</span> {{ wizard.partner_name }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Entities to create -->
+    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-gray-800">
+            <h3 class="font-medium text-white flex items-center gap-2">
+                <span>🏢</span> {% if lang == 'en' %}Entities we'll create{% else %}Entiteiten die we aanmaken{% endif %}
+            </h3>
+            <a href="/wizard?step=work" class="text-green-400 hover:text-green-300 text-sm">
+                {% if lang == 'en' %}Edit{% else %}Bewerken{% endif %} ✏️
+            </a>
+        </div>
+        <div class="p-4 space-y-3">
+            <!-- Entity diagram -->
+            <div class="bg-gray-800/50 rounded-lg p-4">
+                <div class="flex flex-col items-center gap-2 text-sm">
+                    <div class="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-center">
+                        👤 {{ wizard.display_name or wizard.username }}
+                    </div>
+
+                    {% if wizard.has_partner or 'employed' in work or not work %}
+                    <div class="text-gray-500 text-xs">↓</div>
+                    <div class="bg-purple-900/30 border border-purple-700 rounded-lg px-4 py-2 text-center">
+                        🏠 {{ wizard.display_name or 'Persoonlijk' }} — {% if lang == 'en' %}Personal{% else %}Privé{% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if 'zzp' in work %}
+                    <div class="text-gray-500 text-xs">↓</div>
+                    <div class="bg-yellow-900/30 border border-yellow-700 rounded-lg px-4 py-2 text-center">
+                        🔧 {{ wizard.zzp_name or 'ZZP' }}
+                        {% if wizard.zzp_kvk %}<span class="text-xs text-gray-500 block">KvK: {{ wizard.zzp_kvk }}</span>{% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if wizard.has_holding %}
+                    <div class="text-gray-500 text-xs">↓</div>
+                    <div class="bg-green-900/30 border border-green-700 rounded-lg px-4 py-2 text-center">
+                        🏢 {{ wizard.holding_name or 'Holding BV' }}
+                    </div>
+                    <div class="text-gray-500 text-xs">↓ {% if lang == 'en' %}holding → operating{% else %}holding → werkmaatschappij{% endif %}</div>
+                    {% endif %}
+
+                    {% if 'bv' in work %}
+                    {% if not wizard.has_holding %}<div class="text-gray-500 text-xs">↓</div>{% endif %}
+                    <div class="bg-blue-900/30 border border-blue-700 rounded-lg px-4 py-2 text-center">
+                        🏢 {{ wizard.bv_name or 'BV' }}
+                        {% if wizard.bv_kvk %}<span class="text-xs text-gray-500 block">KvK: {{ wizard.bv_kvk }}</span>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Details list -->
+            <div class="text-sm text-gray-400 space-y-1">
+                {% if wizard.has_partner %}
+                <p>👫 {% if lang == 'en' %}Fiscal partnership with {{ wizard.partner_name }}{% else %}Fiscaal partnerschap met {{ wizard.partner_name }}{% endif %}</p>
+                {% endif %}
+                {% if wizard.has_holding and wizard.management_fee %}
+                <p>💰 {% if lang == 'en' %}Management fee: Holding → {{ wizard.bv_name or 'Operating BV' }}{% else %}Managementfee: Holding → {{ wizard.bv_name or 'Werkmaatschappij' }}{% endif %}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Banking -->
+    {% if wizard.banks %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-gray-800">
+            <h3 class="font-medium text-white flex items-center gap-2">
+                <span>🏦</span> {% if lang == 'en' %}Banking{% else %}Bankzaken{% endif %}
+            </h3>
+            <a href="/wizard?step=banking" class="text-green-400 hover:text-green-300 text-sm">
+                {% if lang == 'en' %}Edit{% else %}Bewerken{% endif %} ✏️
+            </a>
+        </div>
+        <div class="p-4 text-sm text-gray-300">
+            {% set bank_names = {"ing": "ING", "rabo": "Rabobank", "abn": "ABN AMRO", "bunq": "bunq", "knab": "Knab", "sns": "SNS", "triodos": "Triodos", "asn": "ASN Bank", "revolut": "Revolut", "n26": "N26", "other": "Other"} %}
+            <p>{{ wizard.banks | map('replace_bank', bank_names) | join(', ') if false else wizard.banks | join(', ') }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- BTW -->
+    {% if 'zzp' in work or 'bv' in work %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-gray-800">
+            <h3 class="font-medium text-white flex items-center gap-2">
+                <span>📊</span> BTW / VAT
+            </h3>
+            <a href="/wizard?step=btw" class="text-green-400 hover:text-green-300 text-sm">
+                {% if lang == 'en' %}Edit{% else %}Bewerken{% endif %} ✏️
+            </a>
+        </div>
+        <div class="p-4 text-sm text-gray-300 space-y-1">
+            {% set btw_labels = {"standard": ("Standaard BTW-plichtig", "Standard VAT registered"), "kor": ("KOR (Kleineondernemersregeling)", "KOR (Small Business Scheme)"), "exempt": ("Vrijgesteld", "Exempt")} %}
+            {% set freq_labels = {"monthly": ("Maandelijks", "Monthly"), "quarterly": ("Per kwartaal", "Quarterly"), "yearly": ("Jaarlijks", "Yearly")} %}
+            
+            {% set btw_label = btw_labels.get(wizard.btw_status, ("Standaard", "Standard")) %}
+            <p><span class="text-gray-500">Status:</span> {% if lang == 'en' %}{{ btw_label[1] }}{% else %}{{ btw_label[0] }}{% endif %}</p>
+            
+            {% if wizard.btw_status == 'standard' %}
+            {% set freq_label = freq_labels.get(wizard.btw_frequency, ("Per kwartaal", "Quarterly")) %}
+            <p><span class="text-gray-500">{% if lang == 'en' %}Filing frequency:{% else %}Aangiftefrequentie:{% endif %}</span> {% if lang == 'en' %}{{ freq_label[1] }}{% else %}{{ freq_label[0] }}{% endif %}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Language -->
+    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <div class="flex items-center justify-between p-4 border-b border-gray-800">
+            <h3 class="font-medium text-white flex items-center gap-2">
+                <span>🌐</span> {% if lang == 'en' %}Language{% else %}Taal{% endif %}
+            </h3>
+            <a href="/wizard?step=welcome" class="text-green-400 hover:text-green-300 text-sm">
+                {% if lang == 'en' %}Edit{% else %}Bewerken{% endif %} ✏️
+            </a>
+        </div>
+        <div class="p-4 text-sm text-gray-300">
+            {{ "🇳🇱 Nederlands" if wizard.language == 'nl' else "🇬🇧 English" }}
+        </div>
+    </div>
+
+    <!-- Confirmation -->
+    <div class="bg-green-900/20 border border-green-700/50 rounded-xl p-6 text-center">
+        <p class="text-green-300 mb-4">
+            {% if lang == 'en' %}
+            Ready? We'll create your entities, set up the chart of accounts, and get you started!
+            {% else %}
+            Klaar? We maken je entiteiten aan, richten het grootboek in, en je kunt van start!
+            {% endif %}
+        </p>
+        <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-lg transition text-lg">
+            {% if lang == 'en' %}Create my administration 🚀{% else %}Maak mijn administratie aan 🚀{% endif %}
+        </button>
+    </div>
+
+    <!-- Back button -->
+    <div class="flex justify-start">
+        <a href="/wizard?step={% if 'zzp' in work or 'bv' in work %}btw{% else %}banking{% endif %}"
+           class="text-gray-400 hover:text-white py-3 px-6 rounded-lg transition flex items-center gap-2">
+            <span>←</span> {% if lang == 'en' %}Back{% else %}Terug{% endif %}
+        </a>
+    </div>
+</form>
+{% endblock %}

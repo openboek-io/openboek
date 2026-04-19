@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Entities — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold">🏢 {{ t('nav.entities') }}</h1>
+        <a href="/entities/new" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
+            + {{ t('action.create') }}
+        </a>
+    </div>
+
+    {% if entities %}
+    <div class="space-y-3">
+        {% for entity in entities %}
+        <a href="/entities/{{ entity.id }}" class="block bg-gray-900 rounded-lg border border-gray-800 p-4 hover:border-gray-700 transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="font-medium text-white">{{ entity.name }}</h2>
+                    <p class="text-sm text-gray-400">{{ t('entity_type.' + entity.entity_type.value) }}</p>
+                </div>
+                <div class="text-right text-sm text-gray-500">
+                    {% if entity.kvk_number %}KVK: {{ entity.kvk_number }}{% endif %}
+                    {% if entity.btw_number %}<br>BTW: {{ entity.btw_number }}{% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
+        <p class="text-gray-400 mb-4">No entities yet.</p>
+        <a href="/entities/new" class="text-green-400 hover:underline">Create your first entity →</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

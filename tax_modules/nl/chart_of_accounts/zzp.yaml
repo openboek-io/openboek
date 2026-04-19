@@ -1,0 +1,437 @@
+name_nl: "ZZP Grootboekschema"
+name_en: "ZZP Chart of Accounts"
+entity_type: zzp
+description_nl: "Vereenvoudigd grootboekschema gebaseerd op RGS voor eenmanszaken en ZZP'ers"
+description_en: "Simplified chart of accounts based on RGS for sole proprietorships (ZZP)"
+
+accounts:
+  # ============================================================
+  # BALANS - ACTIVA
+  # ============================================================
+
+  # Vaste activa
+  - code: "0200"
+    name_nl: "Materiële vaste activa"
+    name_en: "Tangible fixed assets"
+    type: asset
+    rgs: "BMatVas"
+    children:
+      - code: "0210"
+        name_nl: "Bedrijfsmiddelen en inventaris"
+        name_en: "Equipment and inventory"
+        type: asset
+        rgs: "BMatBei"
+      - code: "0211"
+        name_nl: "Cum. afschrijving bedrijfsmiddelen"
+        name_en: "Accum. depreciation equipment"
+        type: asset
+        contra: true
+        rgs: "BMatBeiCua"
+      - code: "0220"
+        name_nl: "Computer en software"
+        name_en: "Computer and software"
+        type: asset
+        rgs: "BMatAut"
+      - code: "0221"
+        name_nl: "Cum. afschrijving computer"
+        name_en: "Accum. depreciation computer"
+        type: asset
+        contra: true
+        rgs: "BMatAutCua"
+      - code: "0230"
+        name_nl: "Vervoermiddelen"
+        name_en: "Vehicles"
+        type: asset
+        rgs: "BMatVer"
+      - code: "0231"
+        name_nl: "Cum. afschrijving vervoermiddelen"
+        name_en: "Accum. depreciation vehicles"
+        type: asset
+        contra: true
+        rgs: "BMatVerCua"
+
+  # Vlottende activa
+  - code: "1000"
+    name_nl: "Kas"
+    name_en: "Cash"
+    type: asset
+    rgs: "BLimKas"
+
+  - code: "1100"
+    name_nl: "Bank"
+    name_en: "Bank account"
+    type: asset
+    rgs: "BLimBan"
+    children:
+      - code: "1110"
+        name_nl: "Zakelijke betaalrekening"
+        name_en: "Business current account"
+        type: asset
+        rgs: "BLimBanRba"
+      - code: "1120"
+        name_nl: "Zakelijke spaarrekening"
+        name_en: "Business savings account"
+        type: asset
+        rgs: "BLimBanSpa"
+
+  - code: "1300"
+    name_nl: "Debiteuren"
+    name_en: "Accounts receivable"
+    type: asset
+    rgs: "BVorDeb"
+    children:
+      - code: "1310"
+        name_nl: "Handelsdebiteuren"
+        name_en: "Trade receivables"
+        type: asset
+        rgs: "BVorDebHad"
+
+  - code: "1500"
+    name_nl: "BTW"
+    name_en: "VAT"
+    type: asset
+    rgs: "BVorBtw"
+    children:
+      - code: "1510"
+        name_nl: "Te vorderen BTW (voorbelasting)"
+        name_en: "VAT receivable (input tax)"
+        type: asset
+        rgs: "BVorBtwVor"
+      - code: "1520"
+        name_nl: "Af te dragen BTW (omzetbelasting)"
+        name_en: "VAT payable (output tax)"
+        type: liability
+        rgs: "BSchBtaOms"
+      - code: "1530"
+        name_nl: "BTW afdracht / te ontvangen"
+        name_en: "VAT settlement"
+        type: liability
+        rgs: "BSchBtaBtw"
+
+  # ============================================================
+  # BALANS - PASSIVA
+  # ============================================================
+
+  - code: "0900"
+    name_nl: "Eigen vermogen"
+    name_en: "Equity"
+    type: equity
+    rgs: "BEivKap"
+    children:
+      - code: "0910"
+        name_nl: "Kapitaal / eigen vermogen"
+        name_en: "Capital / equity"
+        type: equity
+        rgs: "BEivKapOve"
+      - code: "0950"
+        name_nl: "Privé"
+        name_en: "Private drawings"
+        type: equity
+        rgs: "BEivPri"
+        children:
+          - code: "0951"
+            name_nl: "Privé-opnamen"
+            name_en: "Private withdrawals"
+            type: equity
+            rgs: "BEivPriOpn"
+          - code: "0952"
+            name_nl: "Privé-stortingen"
+            name_en: "Private deposits"
+            type: equity
+            rgs: "BEivPriSto"
+          - code: "0959"
+            name_nl: "Privégebruik auto"
+            name_en: "Private use of vehicle"
+            type: equity
+            rgs: "BEivPriAut"
+
+  - code: "1600"
+    name_nl: "Crediteuren"
+    name_en: "Accounts payable"
+    type: liability
+    rgs: "BSchCre"
+    children:
+      - code: "1610"
+        name_nl: "Handelscrediteuren"
+        name_en: "Trade payables"
+        type: liability
+        rgs: "BSchCreHac"
+
+  - code: "1700"
+    name_nl: "Belastingschulden"
+    name_en: "Tax liabilities"
+    type: liability
+    rgs: "BSchBta"
+    children:
+      - code: "1710"
+        name_nl: "Loonheffing"
+        name_en: "Payroll tax"
+        type: liability
+        rgs: "BSchBtaLhe"
+      - code: "1720"
+        name_nl: "Inkomstenbelasting"
+        name_en: "Income tax"
+        type: liability
+        rgs: "BSchBtaVpb"
+
+  # ============================================================
+  # WINST & VERLIES - OMZET
+  # ============================================================
+
+  - code: "8000"
+    name_nl: "Omzet"
+    name_en: "Revenue"
+    type: revenue
+    rgs: "WOmzNop"
+    children:
+      - code: "8010"
+        name_nl: "Omzet diensten binnenland"
+        name_en: "Revenue services domestic"
+        type: revenue
+        rgs: "WOmzNopOlb"
+      - code: "8020"
+        name_nl: "Omzet diensten buitenland (EU)"
+        name_en: "Revenue services EU"
+        type: revenue
+        rgs: "WOmzNopOle"
+      - code: "8030"
+        name_nl: "Omzet diensten buitenland (niet-EU)"
+        name_en: "Revenue services non-EU"
+        type: revenue
+        rgs: "WOmzNopOlw"
+      - code: "8100"
+        name_nl: "Omzet goederen"
+        name_en: "Revenue goods"
+        type: revenue
+        rgs: "WOmzNopOgb"
+      - code: "8900"
+        name_nl: "Overige opbrengsten"
+        name_en: "Other income"
+        type: revenue
+        rgs: "WOmzNopOve"
+
+  # ============================================================
+  # WINST & VERLIES - KOSTEN
+  # ============================================================
+
+  - code: "4000"
+    name_nl: "Inkoop"
+    name_en: "Cost of goods / purchases"
+    type: expense
+    rgs: "WKprInk"
+    children:
+      - code: "4010"
+        name_nl: "Inkoopwaarde omzet"
+        name_en: "Cost of sales"
+        type: expense
+        rgs: "WKprInkIvg"
+      - code: "4020"
+        name_nl: "Uitbesteed werk / subcontractors"
+        name_en: "Subcontracted work"
+        type: expense
+        rgs: "WKprInkUbw"
+
+  - code: "4100"
+    name_nl: "Huisvestingskosten"
+    name_en: "Housing costs"
+    type: expense
+    rgs: "WBedHui"
+    children:
+      - code: "4110"
+        name_nl: "Huur kantoor / werkruimte"
+        name_en: "Office / workspace rent"
+        type: expense
+        rgs: "WBedHuiHko"
+      - code: "4120"
+        name_nl: "Energie en water"
+        name_en: "Energy and water"
+        type: expense
+        rgs: "WBedHuiEne"
+      - code: "4130"
+        name_nl: "Onderhoud werkruimte"
+        name_en: "Workspace maintenance"
+        type: expense
+        rgs: "WBedHuiOwe"
+
+  - code: "4200"
+    name_nl: "Verzekeringen"
+    name_en: "Insurance"
+    type: expense
+    rgs: "WBedVzk"
+    children:
+      - code: "4210"
+        name_nl: "Aansprakelijkheidsverzekering"
+        name_en: "Liability insurance"
+        type: expense
+        rgs: "WBedVzkBea"
+      - code: "4220"
+        name_nl: "Arbeidsongeschiktheidsverzekering"
+        name_en: "Disability insurance"
+        type: expense
+        rgs: "WBedVzkAov"
+      - code: "4290"
+        name_nl: "Overige verzekeringen"
+        name_en: "Other insurance"
+        type: expense
+        rgs: "WBedVzkOve"
+
+  - code: "4300"
+    name_nl: "Kantoorkosten"
+    name_en: "Office expenses"
+    type: expense
+    rgs: "WBedKan"
+    children:
+      - code: "4310"
+        name_nl: "Kantoorbenodigdheden"
+        name_en: "Office supplies"
+        type: expense
+        rgs: "WBedKanKan"
+      - code: "4320"
+        name_nl: "Telefoon en internet"
+        name_en: "Phone and internet"
+        type: expense
+        rgs: "WBedKanTel"
+      - code: "4330"
+        name_nl: "Portokosten"
+        name_en: "Postage"
+        type: expense
+        rgs: "WBedKanPor"
+      - code: "4340"
+        name_nl: "Software en abonnementen"
+        name_en: "Software and subscriptions"
+        type: expense
+        rgs: "WBedKanSof"
+      - code: "4350"
+        name_nl: "Boekhouding en administratie"
+        name_en: "Bookkeeping and administration"
+        type: expense
+        rgs: "WBedKanBoe"
+
+  - code: "4400"
+    name_nl: "Vervoerskosten"
+    name_en: "Transport costs"
+    type: expense
+    rgs: "WBedVkm"
+    children:
+      - code: "4410"
+        name_nl: "Autokosten"
+        name_en: "Car expenses"
+        type: expense
+        rgs: "WBedVkmAut"
+      - code: "4420"
+        name_nl: "Reiskosten (OV)"
+        name_en: "Travel costs (public transport)"
+        type: expense
+        rgs: "WBedVkmOvr"
+      - code: "4430"
+        name_nl: "Kilometervergoeding"
+        name_en: "Mileage allowance"
+        type: expense
+        rgs: "WBedVkmKmv"
+      - code: "4440"
+        name_nl: "Parkeerkosten"
+        name_en: "Parking costs"
+        type: expense
+        rgs: "WBedVkmPar"
+
+  - code: "4500"
+    name_nl: "Afschrijvingen"
+    name_en: "Depreciation"
+    type: expense
+    rgs: "WBedAfs"
+    children:
+      - code: "4510"
+        name_nl: "Afschrijving bedrijfsmiddelen"
+        name_en: "Depreciation equipment"
+        type: expense
+        rgs: "WBedAfsBed"
+      - code: "4520"
+        name_nl: "Afschrijving computer"
+        name_en: "Depreciation computer"
+        type: expense
+        rgs: "WBedAfsAut"
+      - code: "4530"
+        name_nl: "Afschrijving vervoermiddelen"
+        name_en: "Depreciation vehicles"
+        type: expense
+        rgs: "WBedAfsVer"
+      - code: "4540"
+        name_nl: "Kleinschaligheidsinvesteringsaftrek (KIA)"
+        name_en: "Small-scale investment deduction"
+        type: expense
+        rgs: "WBedAfsKia"
+
+  - code: "4600"
+    name_nl: "Verkoopkosten"
+    name_en: "Sales expenses"
+    type: expense
+    rgs: "WBedVkk"
+    children:
+      - code: "4610"
+        name_nl: "Reclame en marketing"
+        name_en: "Advertising and marketing"
+        type: expense
+        rgs: "WBedVkkRec"
+      - code: "4620"
+        name_nl: "Representatiekosten"
+        name_en: "Representation costs"
+        type: expense
+        rgs: "WBedVkkRep"
+      - code: "4630"
+        name_nl: "Website en hosting"
+        name_en: "Website and hosting"
+        type: expense
+        rgs: "WBedVkkWeb"
+
+  - code: "4700"
+    name_nl: "Algemene kosten"
+    name_en: "General expenses"
+    type: expense
+    rgs: "WBedAlg"
+    children:
+      - code: "4710"
+        name_nl: "Contributies en lidmaatschappen"
+        name_en: "Memberships and subscriptions"
+        type: expense
+        rgs: "WBedAlgCon"
+      - code: "4720"
+        name_nl: "Vakliteratuur en opleiding"
+        name_en: "Professional literature and training"
+        type: expense
+        rgs: "WBedAlgVak"
+      - code: "4730"
+        name_nl: "KvK en bankkosten"
+        name_en: "Chamber of Commerce and bank fees"
+        type: expense
+        rgs: "WBedAlgBan"
+      - code: "4790"
+        name_nl: "Overige bedrijfskosten"
+        name_en: "Other business expenses"
+        type: expense
+        rgs: "WBedAlgOve"
+
+  # ============================================================
+  # WINST & VERLIES - FINANCIEEL
+  # ============================================================
+
+  - code: "4800"
+    name_nl: "Financiële baten en lasten"
+    name_en: "Financial income and expenses"
+    type: expense
+    rgs: "WFbe"
+    children:
+      - code: "4810"
+        name_nl: "Rentelasten"
+        name_en: "Interest expenses"
+        type: expense
+        rgs: "WFbeRls"
+      - code: "4820"
+        name_nl: "Rentebaten"
+        name_en: "Interest income"
+        type: revenue
+        rgs: "WFbeRbt"
+      - code: "4830"
+        name_nl: "Bankkosten"
+        name_en: "Bank charges"
+        type: expense
+        rgs: "WFbeBkn"

@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: openboek
+      POSTGRES_USER: openboek
+      POSTGRES_PASSWORD: openboek
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openboek"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${APP_PORT:-8070}:${APP_PORT:-8070}"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./data/files:/var/lib/openboek/files
+
+volumes:
+  pgdata:

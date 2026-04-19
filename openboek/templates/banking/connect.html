@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}🔗 {{ t('banking.connect_title') }} — OpenBoek{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-green-400">🔗 {{ t('banking.connect_title') }}</h1>
+        <a href="/entities/{{ entity.id }}/banking"
+           class="text-sm px-3 py-1 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition">
+            ← {{ t('banking.back') }}
+        </a>
+    </div>
+
+    {% if not gc_available %}
+    <!-- GoCardless not configured -->
+    <div class="bg-yellow-900/30 border border-yellow-800 rounded-lg p-6">
+        <h2 class="text-lg font-medium text-yellow-300 mb-2">{{ t('banking.gc_not_configured') }}</h2>
+        <p class="text-gray-400 text-sm mb-4">{{ t('banking.gc_setup_hint') }}</p>
+        <div class="bg-gray-900 rounded-lg p-4 text-sm font-mono text-gray-400">
+            GOCARDLESS_SECRET_ID=your-secret-id<br/>
+            GOCARDLESS_SECRET_KEY=your-secret-key
+        </div>
+    </div>
+    {% else %}
+
+    <!-- New connection form -->
+    <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-medium text-white mb-4">{{ t('banking.new_connection') }}</h2>
+        <form action="/entities/{{ entity.id }}/banking/connect" method="post">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-300 mb-1">{{ t('banking.select_bank') }}</label>
+                <select name="institution_id"
+                        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-green-500 focus:border-green-500">
+                    <option value="ING_INGBNL2A">ING (NL)</option>
+                    <option value="RABOBANK_RABONL2U">Rabobank</option>
+                    <option value="ABNAMRO_ABNANL2A">ABN AMRO</option>
+                    <option value="BUNQ_BUNQNL2A">bunq</option>
+                    <option value="KNAB_KNABNL2H">Knab</option>
+                    <option value="SNS_SNSBNL2A">SNS</option>
+                    <option value="ASN_ASNBNL21">ASN Bank</option>
+                    <option value="TRIODOS_TRIONL2U">Triodos</option>
+                </select>
+            </div>
+            <button type="submit"
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition">
+                🏦 {{ t('banking.connect_bank') }}
+            </button>
+        </form>
+        <p class="text-xs text-gray-500 mt-3">{{ t('banking.gc_privacy_note') }}</p>
+    </div>
+
+    <!-- Existing connections -->
+    {% if connections %}
+    <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+        <h2 class="text-lg font-medium text-white mb-4">{{ t('banking.existing_connections') }}</h2>
+        <div class="space-y-3">
+            {% for conn in connections %}
+            <div class="flex items-center justify-between bg-gray-900 rounded-lg p-4">
+                <div>
+                    <div class="text-white font-medium">
+                        {{ conn.institution_name or conn.institution_id or 'Bank' }}
+                    </div>
+                    <div class="text-sm text-gray-400">
+                        {{ t('banking.status') }}: 
+                        {% if conn.status == 'linked' %}
+                        <span class="text-green-400">✅ {{ t('banking.status_linked') }}</span>
+                        {% elif conn.status == 'pending' %}
+                        <span class="text-yellow-400">⏳ {{ t('banking.status_pending') }}</span>
+                        {% else %}
+                        <span class="text-gray-400">{{ conn.status }}</span>
+                        {% endif %}
+                        {% if conn.last_synced_at %}
+                        <span class="ml-3">{{ t('banking.last_sync') }}: {{ conn.last_synced_at }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if conn.status == 'linked' %}
+                <form action="/entities/{{ entity.id }}/banking/sync/{{ conn.id }}" method="post">
+                    <button type="submit"
+                            class="text-sm px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition">
+                        🔄 {{ t('banking.sync_now') }}
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Profit & Loss — {{ entity.name }} — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">📈 Profit & Loss (Winst- en Verliesrekening)</h1>
+
+    <form method="GET" class="bg-gray-900 rounded-lg border border-gray-800 p-4 mb-6">
+        <div class="flex flex-wrap gap-4 items-end">
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">From</label>
+                <input type="date" name="date_from" value="{{ date_from }}"
+                    class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">To</label>
+                <input type="date" name="date_to" value="{{ date_to }}"
+                    class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
+            </div>
+            <button type="submit" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1.5 rounded text-sm transition">
+                Generate
+            </button>
+        </div>
+    </form>
+
+    <div class="space-y-6">
+        <!-- Revenue -->
+        <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+            <div class="px-4 py-3 bg-green-900/20 border-b border-gray-800">
+                <h2 class="font-semibold text-green-400">{{ t('account_type.revenue') }}</h2>
+            </div>
+            {% if revenue_items %}
+            <table class="w-full text-sm">
+                <tbody class="divide-y divide-gray-800">
+                    {% for id, data in revenue_items.items() %}
+                    <tr>
+                        <td class="px-4 py-2 font-mono text-gray-400">{{ data.account.code }}</td>
+                        <td class="px-4 py-2">{% if lang == 'en' %}{{ data.account.name_en }}{% else %}{{ data.account.name_nl }}{% endif %}</td>
+                        <td class="px-4 py-2 text-right font-mono text-green-400">€{{ "{:,.2f}".format(data.balance) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="border-t-2 border-gray-700 font-semibold">
+                        <td colspan="2" class="px-4 py-3">Total Revenue</td>
+                        <td class="px-4 py-3 text-right font-mono text-green-400">€{{ "{:,.2f}".format(total_revenue) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+            {% else %}
+            <p class="px-4 py-4 text-gray-500 text-sm">No revenue entries.</p>
+            {% endif %}
+        </div>
+
+        <!-- Expenses -->
+        <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+            <div class="px-4 py-3 bg-red-900/20 border-b border-gray-800">
+                <h2 class="font-semibold text-red-400">{{ t('account_type.expense') }}</h2>
+            </div>
+            {% if expense_items %}
+            <table class="w-full text-sm">
+                <tbody class="divide-y divide-gray-800">
+                    {% for id, data in expense_items.items() %}
+                    <tr>
+                        <td class="px-4 py-2 font-mono text-gray-400">{{ data.account.code }}</td>
+                        <td class="px-4 py-2">{% if lang == 'en' %}{{ data.account.name_en }}{% else %}{{ data.account.name_nl }}{% endif %}</td>
+                        <td class="px-4 py-2 text-right font-mono text-red-400">€{{ "{:,.2f}".format(data.balance) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="border-t-2 border-gray-700 font-semibold">
+                        <td colspan="2" class="px-4 py-3">Total Expenses</td>
+                        <td class="px-4 py-3 text-right font-mono text-red-400">€{{ "{:,.2f}".format(total_expenses) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+            {% else %}
+            <p class="px-4 py-4 text-gray-500 text-sm">No expense entries.</p>
+            {% endif %}
+        </div>
+
+        <!-- Net Result -->
+        <div class="bg-gray-900 rounded-xl border-2 {% if net_result >= 0 %}border-green-700{% else %}border-red-700{% endif %} p-6 text-center">
+            <p class="text-gray-400 mb-1">Net Result</p>
+            <p class="text-3xl font-bold font-mono {% if net_result >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                €{{ "{:,.2f}".format(net_result) }}
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

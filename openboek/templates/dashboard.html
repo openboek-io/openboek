@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-2xl font-bold">📊 {{ t('nav.dashboard') }}</h1>
+        <a href="/entities/new" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
+            + New Entity
+        </a>
+    </div>
+
+    {% if entity_stats %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for stat in entity_stats %}
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 hover:border-gray-700 transition">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold">{{ stat.entity.name }}</h2>
+                <span class="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded">
+                    {{ t('entity_type.' + stat.entity.entity_type.value) }}
+                </span>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <p class="text-gray-500">{{ t('account_type.asset') }}</p>
+                    <p class="text-lg font-medium {% if stat.assets >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        €{{ "{:,.2f}".format(stat.assets) }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-gray-500">{{ t('account_type.liability') }}</p>
+                    <p class="text-lg font-medium text-gray-300">€{{ "{:,.2f}".format(stat.liabilities) }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">{{ t('account_type.revenue') }}</p>
+                    <p class="text-lg font-medium text-green-400">€{{ "{:,.2f}".format(stat.revenue) }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">Profit</p>
+                    <p class="text-lg font-medium {% if stat.profit >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        €{{ "{:,.2f}".format(stat.profit) }}
+                    </p>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-800 flex items-center justify-between">
+                <span class="text-xs text-gray-500">{{ stat.entry_count }} journal entries</span>
+                <div class="flex gap-2">
+                    <a href="/entities/{{ stat.entity.id }}/journal" class="text-xs text-green-400 hover:underline">Journal</a>
+                    <a href="/entities/{{ stat.entity.id }}/invoices" class="text-xs text-green-400 hover:underline">Invoices</a>
+                    <a href="/entities/{{ stat.entity.id }}/banking" class="text-xs text-green-400 hover:underline">Banking</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-12 text-center">
+        <p class="text-4xl mb-4">📗</p>
+        <h2 class="text-xl font-semibold mb-2">Welcome to OpenBoek</h2>
+        <p class="text-gray-400 mb-6">Get started by creating your first entity (business or personal).</p>
+        <a href="/entities/new" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition">
+            Create Your First Entity
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

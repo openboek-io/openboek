@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('ai.insights_title') }} — OpenBoek{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold text-green-400">💡 {{ t('ai.insights_title') }}</h1>
+            <a href="/ai{% if selected_entity_id %}?entity_id={{ selected_entity_id }}{% endif %}"
+               class="text-sm px-3 py-1 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                🤖 {{ t('ai.chat_link') }}
+            </a>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if not ai_available %}
+            <span class="text-xs px-2 py-1 rounded-full bg-red-900/50 text-red-400 border border-red-800">
+                ⚠️ {{ t('ai.offline') }}
+            </span>
+            {% endif %}
+            <select id="entity-select" onchange="switchEntity(this.value)"
+                    class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:ring-green-500 focus:border-green-500">
+                {% for entity in entities %}
+                <option value="{{ entity.id }}" {% if selected_entity_id == entity.id|string %}selected{% endif %}>
+                    {{ entity.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    {% if not ai_available %}
+    <div class="bg-red-900/30 border border-red-800 rounded-lg p-6 text-center">
+        <p class="text-red-300">{{ t('ai.unavailable_message') }}</p>
+    </div>
+    {% elif not insights %}
+    <div class="bg-gray-800 border border-gray-700 rounded-lg p-8 text-center">
+        <div class="text-4xl mb-3">✨</div>
+        <h2 class="text-lg font-medium text-gray-300 mb-2">{{ t('ai.no_insights_title') }}</h2>
+        <p class="text-gray-500 text-sm">{{ t('ai.no_insights_desc') }}</p>
+    </div>
+    {% else %}
+    <!-- Insights grid -->
+    <div class="space-y-4">
+        {% for insight in insights %}
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-5 hover:border-gray-600 transition" id="insight-{{ insight.id }}">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <!-- Risk level badge -->
+                        {% if insight.risk_level == 'safe' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-400 border border-green-800">
+                            🟢 {{ t('ai.risk.safe') }}
+                        </span>
+                        {% elif insight.risk_level == 'commonly_accepted' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-900/50 text-yellow-400 border border-yellow-800">
+                            🟡 {{ t('ai.risk.commonly_accepted') }}
+                        </span>
+                        {% elif insight.risk_level == 'gray_area' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-900/50 text-orange-400 border border-orange-800">
+                            🟠 {{ t('ai.risk.gray_area') }}
+                        </span>
+                        {% elif insight.risk_level == 'aggressive' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-900/50 text-red-400 border border-red-800">
+                            🔴 {{ t('ai.risk.aggressive') }}
+                        </span>
+                        {% endif %}
+
+                        <!-- Category badge -->
+                        {% if insight.category == 'deadline' %}
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-blue-900/50 text-blue-400 border border-blue-800">
+                            📅 {{ t('ai.category.deadline') }}
+                        </span>
+                        {% elif insight.category == 'deduction' %}
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-purple-900/50 text-purple-400 border border-purple-800">
+                            💰 {{ t('ai.category.deduction') }}
+                        </span>
+                        {% elif insight.category == 'optimization' %}
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-900/50 text-cyan-400 border border-cyan-800">
+                            ⚡ {{ t('ai.category.optimization') }}
+                        </span>
+                        {% elif insight.category == 'warning' %}
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-amber-900/50 text-amber-400 border border-amber-800">
+                            ⚠️ {{ t('ai.category.warning') }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <h3 class="text-white font-medium mb-1">
+                        {% if lang == 'nl' %}{{ insight.title_nl }}{% else %}{{ insight.title_en }}{% endif %}
+                    </h3>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-2">
+                        {% if lang == 'nl' %}{{ insight.description_nl }}{% else %}{{ insight.description_en }}{% endif %}
+                    </p>
+
+                    <div class="flex items-center gap-4 text-xs text-gray-500">
+                        {% if insight.impact %}
+                        <span class="text-green-400 font-medium">{{ t('ai.estimated_impact') }}: {{ insight.impact }}</span>
+                        {% endif %}
+                        {% if insight.legal_basis %}
+                        <span>📜 {{ insight.legal_basis }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col gap-2 flex-shrink-0">
+                    <button onclick="actOnInsight('{{ insight.id }}')"
+                            class="text-xs px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white transition">
+                        {{ t('ai.action.act') }}
+                    </button>
+                    <button onclick="dismissInsight('{{ insight.id }}')"
+                            class="text-xs px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition">
+                        {{ t('ai.action.dismiss') }}
+                    </button>
+                    <button onclick="snoozeInsight('{{ insight.id }}')"
+                            class="text-xs px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition">
+                        {{ t('ai.action.snooze') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function switchEntity(entityId) {
+    window.location.href = '/ai/insights?entity_id=' + entityId;
+}
+
+function actOnInsight(id) {
+    // Navigate to AI chat with context about this insight
+    const entityId = document.getElementById('entity-select').value;
+    window.location.href = '/ai?entity_id=' + entityId;
+}
+
+function dismissInsight(id) {
+    const el = document.getElementById('insight-' + id);
+    if (el) {
+        el.style.opacity = '0.5';
+        el.style.pointerEvents = 'none';
+    }
+}
+
+function snoozeInsight(id) {
+    const el = document.getElementById('insight-' + id);
+    if (el) {
+        el.style.opacity = '0.5';
+        el.style.pointerEvents = 'none';
+    }
+}
+</script>
+{% endblock %}

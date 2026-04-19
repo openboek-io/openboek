@@ -1,0 +1,519 @@
+name_nl: "OpenBoek Installatiewizard"
+name_en: "OpenBoek Setup Wizard"
+description_nl: "Stel je boekhouding in op basis van je persoonlijke en zakelijke situatie"
+description_en: "Set up your bookkeeping based on your personal and business situation"
+version: "1.0"
+
+questions:
+  # ============================================================
+  # Stap 1: Taal en basisgegevens
+  # ============================================================
+
+  - id: language
+    step: 1
+    question_nl: "In welke taal wil je OpenBoek gebruiken?"
+    question_en: "In which language would you like to use OpenBoek?"
+    explanation_nl: "Je kunt dit later altijd wijzigen in de instellingen."
+    explanation_en: "You can always change this later in settings."
+    type: choice
+    options:
+      - value: nl
+        label_nl: "Nederlands"
+        label_en: "Dutch"
+      - value: en
+        label_nl: "Engels"
+        label_en: "English"
+    default: nl
+    next: fiscal_year
+
+  - id: fiscal_year
+    step: 1
+    question_nl: "Wat is het huidige boekjaar?"
+    question_en: "What is the current fiscal year?"
+    explanation_nl: "Meestal het kalenderjaar. Een afwijkend boekjaar is mogelijk voor BV's."
+    explanation_en: "Usually the calendar year. A different fiscal year is possible for BVs."
+    type: text
+    input_type: year
+    default: "2026"
+    validation:
+      min: 2020
+      max: 2030
+    next: entity_type
+
+  # ============================================================
+  # Stap 2: Type entiteit
+  # ============================================================
+
+  - id: entity_type
+    step: 2
+    question_nl: "Waarvoor wil je OpenBoek gebruiken?"
+    question_en: "What do you want to use OpenBoek for?"
+    explanation_nl: "Kies het type dat het beste past. Je kunt later meerdere entiteiten toevoegen."
+    explanation_en: "Choose the type that fits best. You can add more entities later."
+    type: choice
+    options:
+      - value: personal
+        label_nl: "Persoonlijke financiën / huishouden"
+        label_en: "Personal finance / household"
+        icon: "🏠"
+      - value: zzp
+        label_nl: "Eenmanszaak / ZZP"
+        label_en: "Sole proprietorship / freelancer"
+        icon: "💼"
+      - value: bv
+        label_nl: "Besloten vennootschap (BV)"
+        label_en: "Private limited company (BV)"
+        icon: "🏢"
+      - value: combined
+        label_nl: "Persoonlijk + zakelijk (beide)"
+        label_en: "Personal + business (both)"
+        icon: "📊"
+    next:
+      personal: fiscal_partner
+      zzp: zzp_details
+      bv: bv_details
+      combined: fiscal_partner
+
+  # ============================================================
+  # Stap 3a: Persoonlijk — Fiscaal partner
+  # ============================================================
+
+  - id: fiscal_partner
+    step: 3
+    question_nl: "Heb je een fiscaal partner?"
+    question_en: "Do you have a fiscal partner?"
+    explanation_nl: >
+      Een fiscaal partner is meestal je echtgenoot, geregistreerd partner, of samenwonende 
+      waarmee je een notarieel samenlevingscontract hebt. Fiscaal partnerschap is van belang 
+      voor de aangifte inkomstenbelasting — je kunt bepaalde aftrekposten en vermogen verdelen.
+    explanation_en: >
+      A fiscal partner is usually your spouse, registered partner, or cohabitant with a 
+      notarial cohabitation agreement. Fiscal partnership matters for income tax — you can 
+      distribute certain deductions and assets between partners.
+    type: boolean
+    default: false
+    next:
+      true: partner_work_situation
+      false: your_work_situation
+
+  - id: partner_work_situation
+    step: 3
+    question_nl: "Wat is de werksituatie van je partner?"
+    question_en: "What is your partner's work situation?"
+    explanation_nl: "Dit helpt bij het correct instellen van inkomstencategorieën."
+    explanation_en: "This helps set up income categories correctly."
+    type: choice
+    multiple: true
+    options:
+      - value: employed
+        label_nl: "In loondienst"
+        label_en: "Employed"
+      - value: zzp
+        label_nl: "ZZP / eenmanszaak"
+        label_en: "Sole proprietor / freelancer"
+      - value: bv_director
+        label_nl: "DGA (directeur-grootaandeelhouder)"
+        label_en: "Director-major shareholder (DGA)"
+      - value: retired
+        label_nl: "Gepensioneerd / AOW"
+        label_en: "Retired / state pension"
+      - value: none
+        label_nl: "Geen eigen inkomen"
+        label_en: "No own income"
+    next: your_work_situation
+
+  # ============================================================
+  # Stap 3b: Werksituatie
+  # ============================================================
+
+  - id: your_work_situation
+    step: 3
+    question_nl: "Wat is jouw werksituatie?"
+    question_en: "What is your work situation?"
+    explanation_nl: "Selecteer alles dat van toepassing is. Dit bepaalt welke inkomstencategorieën worden aangemaakt."
+    explanation_en: "Select all that apply. This determines which income categories are created."
+    type: choice
+    multiple: true
+    options:
+      - value: employed
+        label_nl: "In loondienst"
+        label_en: "Employed"
+      - value: zzp
+        label_nl: "ZZP / eenmanszaak"
+        label_en: "Sole proprietor / freelancer"
+      - value: bv_director
+        label_nl: "DGA (directeur-grootaandeelhouder)"
+        label_en: "Director-major shareholder (DGA)"
+      - value: retired
+        label_nl: "Gepensioneerd / AOW"
+        label_en: "Retired / state pension"
+      - value: student
+        label_nl: "Student"
+        label_en: "Student"
+    next:
+      _includes_zzp: zzp_details
+      _includes_bv_director: bv_details
+      _default: banking
+
+  # ============================================================
+  # Stap 4a: ZZP-specifiek
+  # ============================================================
+
+  - id: zzp_details
+    step: 4
+    question_nl: "Wanneer ben je gestart als ZZP'er?"
+    question_en: "When did you start as a sole proprietor?"
+    explanation_nl: >
+      Het startjaar is belangrijk voor de startersaftrek. De eerste 5 jaar heb je mogelijk 
+      recht op extra aftrekposten (startersaftrek, willekeurige afschrijving).
+    explanation_en: >
+      The start year matters for the starter's deduction. In the first 5 years you may be 
+      entitled to extra deductions (starter's deduction, flexible depreciation).
+    type: text
+    input_type: year
+    validation:
+      min: 2000
+      max: 2026
+    next: zzp_btw
+
+  - id: zzp_btw
+    step: 4
+    question_nl: "Ben je BTW-plichtig?"
+    question_en: "Are you registered for VAT?"
+    explanation_nl: >
+      De meeste ZZP'ers zijn BTW-plichtig. Uitzonderingen zijn o.a. medische beroepen, 
+      onderwijs, en de kleineondernemersregeling (KOR, omzet < €20.000). Bij de KOR 
+      breng je geen BTW in rekening en mag je geen BTW terugvragen.
+    explanation_en: >
+      Most sole proprietors are VAT-registered. Exceptions include medical professions, 
+      education, and the small business scheme (KOR, revenue < €20,000). Under the KOR 
+      you don't charge VAT and can't reclaim input VAT.
+    type: choice
+    options:
+      - value: standard
+        label_nl: "Ja, standaard BTW-aangifte"
+        label_en: "Yes, standard VAT filing"
+      - value: kor
+        label_nl: "Nee, ik gebruik de KOR (kleineondernemersregeling)"
+        label_en: "No, I use the KOR (small business scheme)"
+      - value: exempt
+        label_nl: "Nee, vrijgestelde beroepen (medisch, onderwijs)"
+        label_en: "No, exempt professions (medical, education)"
+    next: zzp_urencriterium
+
+  - id: zzp_urencriterium
+    step: 4
+    question_nl: "Verwacht je te voldoen aan het urencriterium (≥1.225 uur/jaar)?"
+    question_en: "Do you expect to meet the hours criterion (≥1,225 hours/year)?"
+    explanation_nl: >
+      Het urencriterium is vereist voor de zelfstandigenaftrek (€5.030 in 2025, afbouwend) 
+      en de startersaftrek. Je moet minimaal 1.225 uur per jaar besteden aan je onderneming. 
+      OpenBoek kan je helpen dit bij te houden.
+    explanation_en: >
+      The hours criterion is required for the self-employed deduction (€5,030 in 2025, 
+      decreasing) and the starter's deduction. You must spend at least 1,225 hours per year 
+      on your business. OpenBoek can help track this.
+    type: boolean
+    default: true
+    next: banking
+
+  # ============================================================
+  # Stap 4b: BV-specifiek
+  # ============================================================
+
+  - id: bv_details
+    step: 4
+    question_nl: "Gegevens van de BV"
+    question_en: "BV details"
+    explanation_nl: "Vul de basisgegevens van je BV in."
+    explanation_en: "Enter the basic details of your BV."
+    type: group
+    fields:
+      - id: bv_name
+        question_nl: "Naam van de BV"
+        question_en: "Name of the BV"
+        type: text
+        required: true
+      - id: bv_kvk
+        question_nl: "KvK-nummer"
+        question_en: "Chamber of Commerce number"
+        type: text
+        validation:
+          pattern: "^[0-9]{8}$"
+          hint_nl: "8 cijfers"
+          hint_en: "8 digits"
+      - id: bv_btw
+        question_nl: "BTW-nummer"
+        question_en: "VAT number"
+        type: text
+        validation:
+          pattern: "^NL[0-9]{9}B[0-9]{2}$"
+          hint_nl: "Formaat: NL000000000B00"
+          hint_en: "Format: NL000000000B00"
+    next: holding_structure
+
+  - id: holding_structure
+    step: 4
+    question_nl: "Heb je een holdingstructuur?"
+    question_en: "Do you have a holding structure?"
+    explanation_nl: >
+      Een holdingstructuur betekent dat je een holding-BV hebt die aandelen houdt in één of 
+      meer werk-BV's. Dit is gebruikelijk voor DGA's en biedt fiscale voordelen 
+      (deelnemingsvrijstelling, risicospreiding). OpenBoek kan intercompany-boekingen 
+      automatisch verwerken.
+    explanation_en: >
+      A holding structure means you have a holding BV that holds shares in one or more 
+      operating BVs. This is common for directors/shareholders and offers tax advantages 
+      (participation exemption, risk distribution). OpenBoek can automatically process 
+      intercompany transactions.
+    type: choice
+    options:
+      - value: none
+        label_nl: "Nee, enkele BV"
+        label_en: "No, single BV"
+      - value: holding_werk
+        label_nl: "Ja, holding + werk-BV"
+        label_en: "Yes, holding + operating BV"
+      - value: holding_multi
+        label_nl: "Ja, holding + meerdere BV's"
+        label_en: "Yes, holding + multiple BVs"
+    next:
+      none: bv_btw_period
+      holding_werk: holding_entities
+      holding_multi: holding_entities
+
+  - id: holding_entities
+    step: 4
+    question_nl: "Hoeveel BV's heb je in totaal (inclusief holding)?"
+    question_en: "How many BVs do you have in total (including holding)?"
+    explanation_nl: "OpenBoek maakt voor elke BV een aparte administratie aan met intercompany-koppelingen."
+    explanation_en: "OpenBoek creates a separate administration for each BV with intercompany links."
+    type: text
+    input_type: number
+    validation:
+      min: 2
+      max: 10
+    default: "2"
+    next: bv_btw_period
+
+  - id: bv_btw_period
+    step: 4
+    question_nl: "Hoe vaak doe je BTW-aangifte?"
+    question_en: "How often do you file VAT returns?"
+    explanation_nl: >
+      De meeste BV's doen per kwartaal aangifte. Maandelijks is verplicht boven een bepaalde 
+      omzet of op verzoek. OpenBoek herinnert je automatisch aan deadlines.
+    explanation_en: >
+      Most BVs file quarterly. Monthly is mandatory above a certain revenue or on request. 
+      OpenBoek automatically reminds you of deadlines.
+    type: choice
+    options:
+      - value: monthly
+        label_nl: "Maandelijks"
+        label_en: "Monthly"
+      - value: quarterly
+        label_nl: "Per kwartaal"
+        label_en: "Quarterly"
+      - value: yearly
+        label_nl: "Jaarlijks"
+        label_en: "Yearly"
+    default: quarterly
+    next: banking
+
+  # ============================================================
+  # Stap 5: Bankrekeningen
+  # ============================================================
+
+  - id: banking
+    step: 5
+    question_nl: "Welke banken gebruik je?"
+    question_en: "Which banks do you use?"
+    explanation_nl: >
+      OpenBoek kan bankafschriften importeren via MT940/CAMT.053 bestanden die je downloadt 
+      van je bank. Selecteer je bank(en) zodat we de juiste importinstellingen gebruiken.
+    explanation_en: >
+      OpenBoek can import bank statements via MT940/CAMT.053 files you download from your 
+      bank. Select your bank(s) so we use the correct import settings.
+    type: choice
+    multiple: true
+    options:
+      - value: abn
+        label_nl: "ABN AMRO"
+        label_en: "ABN AMRO"
+      - value: ing
+        label_nl: "ING"
+        label_en: "ING"
+      - value: rabo
+        label_nl: "Rabobank"
+        label_en: "Rabobank"
+      - value: sns
+        label_nl: "SNS / de Volksbank"
+        label_en: "SNS / de Volksbank"
+      - value: triodos
+        label_nl: "Triodos Bank"
+        label_en: "Triodos Bank"
+      - value: knab
+        label_nl: "Knab"
+        label_en: "Knab"
+      - value: bunq
+        label_nl: "bunq"
+        label_en: "bunq"
+      - value: asn
+        label_nl: "ASN Bank"
+        label_en: "ASN Bank"
+      - value: revolut
+        label_nl: "Revolut"
+        label_en: "Revolut"
+      - value: n26
+        label_nl: "N26"
+        label_en: "N26"
+      - value: other
+        label_nl: "Andere bank"
+        label_en: "Other bank"
+    next: bank_accounts
+
+  - id: bank_accounts
+    step: 5
+    question_nl: "Hoeveel bankrekeningen wil je koppelen?"
+    question_en: "How many bank accounts do you want to connect?"
+    explanation_nl: "Je kunt later altijd meer rekeningen toevoegen."
+    explanation_en: "You can always add more accounts later."
+    type: text
+    input_type: number
+    validation:
+      min: 1
+      max: 20
+    default: "1"
+    next: import_data
+
+  # ============================================================
+  # Stap 6: Data-import
+  # ============================================================
+
+  - id: import_data
+    step: 6
+    question_nl: "Wil je bestaande gegevens importeren?"
+    question_en: "Do you want to import existing data?"
+    explanation_nl: >
+      Als je overstapt van een ander boekhoudpakket, kun je je gegevens importeren. 
+      OpenBoek ondersteunt import van MT940/CAMT.053 bankbestanden en CSV-exports.
+    explanation_en: >
+      If you're switching from another bookkeeping package, you can import your data. 
+      OpenBoek supports MT940/CAMT.053 bank files and CSV exports.
+    type: choice
+    multiple: true
+    options:
+      - value: none
+        label_nl: "Nee, ik begin vers"
+        label_en: "No, I'm starting fresh"
+      - value: mt940
+        label_nl: "Ja, MT940/CAMT.053 bankafschriften"
+        label_en: "Yes, MT940/CAMT.053 bank statements"
+      - value: csv
+        label_nl: "Ja, CSV-export van ander pakket"
+        label_en: "Yes, CSV export from another package"
+      - value: opening_balance
+        label_nl: "Ja, alleen een openingsbalans"
+        label_en: "Yes, only an opening balance"
+    next: summary
+
+  # ============================================================
+  # Stap 7: Samenvatting en bevestiging
+  # ============================================================
+
+  - id: summary
+    step: 7
+    question_nl: "Controleer je instellingen"
+    question_en: "Review your settings"
+    explanation_nl: >
+      Hieronder zie je een overzicht van je gekozen instellingen. Na bevestiging maakt 
+      OpenBoek je administratie aan met het juiste grootboekschema, BTW-instellingen en 
+      bankrekeningen. Je kunt alles later nog aanpassen.
+    explanation_en: >
+      Below you see a summary of your chosen settings. After confirmation, OpenBoek 
+      creates your administration with the correct chart of accounts, VAT settings and 
+      bank accounts. You can adjust everything later.
+    type: summary
+    next: complete
+
+  - id: complete
+    step: 7
+    question_nl: "Je administratie is aangemaakt!"
+    question_en: "Your administration has been created!"
+    explanation_nl: >
+      OpenBoek heeft je administratie ingericht. Je kunt nu beginnen met boeken. 
+      Tip: importeer eerst je bankafschriften om snel je boekhouding bij te werken.
+    explanation_en: >
+      OpenBoek has set up your administration. You can now start booking. 
+      Tip: import your bank statements first to quickly update your bookkeeping.
+    type: completion
+    next: null
+
+# ============================================================
+# Entity creation logic based on wizard answers
+# ============================================================
+
+entity_mapping:
+  personal:
+    chart: "personal.yaml"
+    create_entities:
+      - name_template: "Persoonlijk {year}"
+        type: personal
+  zzp:
+    chart: "zzp.yaml"
+    create_entities:
+      - name_template: "{bv_name|Mijn onderneming} {year}"
+        type: zzp
+  bv:
+    chart: "bv.yaml"
+    create_entities:
+      - name_template: "{bv_name} {year}"
+        type: bv
+  combined:
+    charts:
+      - "personal.yaml"
+      - chart_from: your_work_situation
+        zzp: "zzp.yaml"
+        bv_director: "bv.yaml"
+    create_entities:
+      - name_template: "Persoonlijk {year}"
+        type: personal
+      - name_template: "{bv_name|Mijn onderneming} {year}"
+        type_from: your_work_situation
+
+# ============================================================
+# BTW configuration based on wizard answers
+# ============================================================
+
+btw_config:
+  standard:
+    rates:
+      - name_nl: "Hoog tarief"
+        name_en: "Standard rate"
+        rate: 21.0
+        code: "1"
+      - name_nl: "Laag tarief"
+        name_en: "Reduced rate"
+        rate: 9.0
+        code: "2"
+      - name_nl: "Nultarief (export/ICP)"
+        name_en: "Zero rate (export/ICP)"
+        rate: 0.0
+        code: "3"
+      - name_nl: "Vrijgesteld"
+        name_en: "Exempt"
+        rate: 0.0
+        code: "4"
+        exempt: true
+    filing_frequency_from: bv_btw_period
+    default_frequency: quarterly
+  kor:
+    rates: []
+    filing_frequency: null
+    note_nl: "KOR: geen BTW-aangifte nodig"
+    note_en: "KOR: no VAT filing required"
+  exempt:
+    rates: []
+    filing_frequency: null
+    note_nl: "Vrijgestelde prestaties: geen BTW-aangifte"
+    note_en: "Exempt services: no VAT filing"

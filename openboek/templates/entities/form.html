@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{% if entity %}{{ entity.name }}{% else %}New Entity{% endif %} — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">
+        {% if entity %}{{ t('action.edit') }}: {{ entity.name }}{% else %}{{ t('action.create') }} Entity{% endif %}
+    </h1>
+
+    {% if error %}
+    <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg mb-4">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="{% if entity %}/entities/{{ entity.id }}{% else %}/entities{% endif %}" class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Name</label>
+            <input type="text" name="name" value="{{ entity.name if entity else '' }}" required
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+        </div>
+
+        {% if not entity %}
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Type</label>
+            <select name="entity_type"
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500">
+                {% for et in entity_types %}
+                <option value="{{ et.value }}">{{ t('entity_type.' + et.value) }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">KVK Number</label>
+                <input type="text" name="kvk_number" value="{{ entity.kvk_number if entity and entity.kvk_number else '' }}"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">BTW Number</label>
+                <input type="text" name="btw_number" value="{{ entity.btw_number if entity and entity.btw_number else '' }}"
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">Address</label>
+            <input type="text" name="address" value="{{ entity.address if entity and entity.address else '' }}"
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1">City</label>
+            <input type="text" name="city" value="{{ entity.city if entity and entity.city else '' }}"
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+        </div>
+
+        <div class="flex gap-3 pt-4">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition">
+                {{ t('action.save') }}
+            </button>
+            <a href="{% if entity %}/entities/{{ entity.id }}{% else %}/entities{% endif %}"
+                class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition">
+                {{ t('action.cancel') }}
+            </a>
+        </div>
+    </form>
+
+    {% if entity %}
+    <div class="mt-8 pt-6 border-t border-gray-800">
+        <h2 class="text-lg font-semibold mb-4">Quick Links</h2>
+        <div class="flex flex-wrap gap-3">
+            <a href="/entities/{{ entity.id }}/accounts" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">📋 Accounts</a>
+            <a href="/entities/{{ entity.id }}/journal" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">📖 Journal</a>
+            <a href="/entities/{{ entity.id }}/invoices" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">🧾 Invoices</a>
+            <a href="/entities/{{ entity.id }}/banking" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">🏦 Banking</a>
+            <a href="/entities/{{ entity.id }}/relationships" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-sm transition">🔗 Relationships</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Trial Balance — {{ entity.name }} — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">📊 Trial Balance (Proef- en Saldibalans)</h1>
+
+    <form method="GET" class="bg-gray-900 rounded-lg border border-gray-800 p-4 mb-6">
+        <div class="flex flex-wrap gap-4 items-end">
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">From</label>
+                <input type="date" name="date_from" value="{{ date_from }}"
+                    class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-1">To</label>
+                <input type="date" name="date_to" value="{{ date_to }}"
+                    class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
+            </div>
+            <button type="submit" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1.5 rounded text-sm transition">
+                Generate
+            </button>
+        </div>
+    </form>
+
+    {% if balances %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-800 bg-gray-900/50">
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Code</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Account</th>
+                    <th class="text-right px-4 py-3 text-gray-400 font-medium">Debit</th>
+                    <th class="text-right px-4 py-3 text-gray-400 font-medium">Credit</th>
+                    <th class="text-right px-4 py-3 text-gray-400 font-medium">Balance</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800">
+                {% for id, data in balances.items() %}
+                <tr>
+                    <td class="px-4 py-2 font-mono text-green-400">{{ data.account.code }}</td>
+                    <td class="px-4 py-2">{% if lang == 'en' %}{{ data.account.name_en }}{% else %}{{ data.account.name_nl }}{% endif %}</td>
+                    <td class="px-4 py-2 text-right font-mono">€{{ "{:,.2f}".format(data.debit) }}</td>
+                    <td class="px-4 py-2 text-right font-mono">€{{ "{:,.2f}".format(data.credit) }}</td>
+                    <td class="px-4 py-2 text-right font-mono font-semibold {% if data.balance >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        €{{ "{:,.2f}".format(data.balance) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="border-t-2 border-gray-700 font-semibold">
+                    <td colspan="2" class="px-4 py-3 text-gray-400">Total</td>
+                    <td class="px-4 py-3 text-right font-mono">€{{ "{:,.2f}".format(total_debit) }}</td>
+                    <td class="px-4 py-3 text-right font-mono">€{{ "{:,.2f}".format(total_credit) }}</td>
+                    <td class="px-4 py-3 text-right font-mono {% if total_debit == total_credit %}text-green-400{% else %}text-red-400{% endif %}">
+                        {% if total_debit == total_credit %}✅ Balanced{% else %}❌ Difference: €{{ "{:,.2f}".format(total_debit - total_credit) }}{% endif %}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% else %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
+        <p class="text-gray-400">No posted entries in the selected period.</p>
+    </div>
+    {% endif %}
+
+    <div class="mt-4 flex gap-3">
+        <a href="/entities/{{ entity.id }}/reports/profit-loss{% if date_from %}?date_from={{ date_from }}&date_to={{ date_to }}{% endif %}"
+            class="text-green-400 hover:underline text-sm">📈 Profit & Loss →</a>
+        <a href="/entities/{{ entity.id }}/reports/balance-sheet{% if date_to %}?as_of={{ date_to }}{% endif %}"
+            class="text-green-400 hover:underline text-sm">📊 Balance Sheet →</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}🔍 {{ t('scanner.review_title') }} — OpenBoek{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold text-green-400 mb-6">🔍 {{ t('scanner.review_title') }}</h1>
+
+    {% if ocr_error %}
+    <div class="bg-red-900/30 border border-red-800 rounded-lg p-4 mb-6">
+        <p class="text-red-300">⚠️ {{ t('scanner.ocr_error') }}: {{ ocr_error }}</p>
+        <p class="text-gray-400 text-sm mt-2">{{ t('scanner.manual_entry_hint') }}</p>
+    </div>
+    {% endif %}
+
+    <form action="/entities/{{ entity.id }}/scanner/confirm" method="post">
+        <input type="hidden" name="file_id" value="{{ file_id }}" />
+
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-6 space-y-5">
+            <!-- Vendor -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    🏪 {{ t('scanner.vendor') }}
+                </label>
+                <input type="text" name="vendor" value="{{ ocr_result.vendor or '' }}"
+                       class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-green-500 focus:border-green-500"
+                       placeholder="{{ t('scanner.vendor_placeholder') }}" />
+            </div>
+
+            <!-- Date -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    📅 {{ t('scanner.date') }}
+                </label>
+                <input type="date" name="date" value="{{ ocr_result.date or '' }}"
+                       class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-green-500 focus:border-green-500" />
+            </div>
+
+            <!-- Amounts row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">
+                        💰 {{ t('scanner.total_incl') }}
+                    </label>
+                    <input type="number" name="total_incl" step="0.01"
+                           value="{{ '%.2f'|format(ocr_result.total_incl) if ocr_result.total_incl else '' }}"
+                           class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-green-500 focus:border-green-500" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">
+                        💶 {{ t('scanner.total_excl') }}
+                    </label>
+                    <input type="number" name="total_excl" step="0.01"
+                           value="{{ '%.2f'|format(ocr_result.total_excl) if ocr_result.total_excl else '' }}"
+                           class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-green-500 focus:border-green-500" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">
+                        🏛️ {{ t('scanner.btw_amount') }}
+                    </label>
+                    <input type="number" name="btw_amount" step="0.01"
+                           value="{{ '%.2f'|format(ocr_result.btw_amount) if ocr_result.btw_amount else '' }}"
+                           class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-green-500 focus:border-green-500" />
+                </div>
+            </div>
+
+            <!-- BTW rate -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    📊 {{ t('scanner.btw_rate') }}
+                </label>
+                <select name="btw_rate"
+                        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-green-500 focus:border-green-500">
+                    <option value="21" {% if ocr_result.btw_rate == 21 %}selected{% endif %}>21%</option>
+                    <option value="9" {% if ocr_result.btw_rate == 9 %}selected{% endif %}>9%</option>
+                    <option value="0" {% if ocr_result.btw_rate == 0 %}selected{% endif %}>0%</option>
+                </select>
+            </div>
+
+            <!-- Category / Expense account -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    📁 {{ t('scanner.category') }}
+                    {% if ocr_result.category_hint and ocr_result.category_hint != 'other' %}
+                    <span class="text-xs text-green-400 ml-2">{{ t('scanner.ai_suggests') }}: {{ ocr_result.category_hint }}</span>
+                    {% endif %}
+                </label>
+                <select name="expense_account_id"
+                        class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-green-500 focus:border-green-500">
+                    <option value="">— {{ t('scanner.select_account') }} —</option>
+                    {% for account in accounts %}
+                    {% if account.account_type.value == 'expense' %}
+                    <option value="{{ account.id }}">
+                        {{ account.code }} — {% if lang == 'nl' %}{{ account.name_nl }}{% else %}{{ account.name_en }}{% endif %}
+                    </option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if ocr_result.line_items %}
+            <!-- Line items from OCR -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">
+                    📋 {{ t('scanner.line_items') }}
+                </label>
+                <div class="space-y-2">
+                    {% for item in ocr_result.line_items %}
+                    <div class="flex items-center gap-3 text-sm text-gray-400 bg-gray-900 rounded-lg px-3 py-2">
+                        <span class="flex-1">{{ item.description or '-' }}</span>
+                        <span class="text-green-400 font-mono">€{{ '%.2f'|format(item.amount or 0) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 mt-6">
+            <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition">
+                ✅ {{ t('scanner.confirm_create') }}
+            </button>
+            <a href="/entities/{{ entity.id }}/scanner"
+               class="bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium py-3 px-6 rounded-lg transition text-center">
+                ↩ {{ t('scanner.scan_another') }}
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

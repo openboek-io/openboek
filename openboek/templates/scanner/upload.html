@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}📸 {{ t('scanner.title') }} — OpenBoek{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <h1 class="text-2xl font-bold text-green-400 mb-6">📸 {{ t('scanner.title') }}</h1>
+
+    <div class="bg-gray-800 border border-gray-700 rounded-lg p-6">
+        <!-- Camera capture area -->
+        <div id="camera-area" class="mb-6 hidden">
+            <video id="camera-feed" autoplay playsinline class="w-full rounded-lg bg-black mb-3" style="max-height: 400px;"></video>
+            <div class="flex gap-3">
+                <button onclick="capturePhoto()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition">
+                    📷 {{ t('scanner.capture') }}
+                </button>
+                <button onclick="stopCamera()" class="bg-gray-700 hover:bg-gray-600 text-gray-300 py-3 px-4 rounded-lg transition">
+                    ✕
+                </button>
+            </div>
+            <canvas id="capture-canvas" class="hidden"></canvas>
+        </div>
+
+        <!-- Upload form -->
+        <form id="upload-form" action="/entities/{{ entity.id }}/scanner/upload" method="post" enctype="multipart/form-data">
+            <div class="space-y-4">
+                <!-- Big camera button (mobile-first) -->
+                <button type="button" onclick="startCamera()"
+                        class="w-full bg-green-600/20 border-2 border-dashed border-green-500 hover:bg-green-600/30 text-green-400 font-medium py-8 px-4 rounded-lg transition text-center">
+                    <div class="text-4xl mb-2">📸</div>
+                    <div>{{ t('scanner.open_camera') }}</div>
+                    <div class="text-xs text-green-500/70 mt-1">{{ t('scanner.camera_hint') }}</div>
+                </button>
+
+                <!-- Or file upload -->
+                <div class="relative">
+                    <div class="text-center text-gray-500 text-sm my-2">{{ t('scanner.or') }}</div>
+                    <label class="block w-full cursor-pointer bg-gray-700 hover:bg-gray-600 text-gray-300 text-center font-medium py-4 px-4 rounded-lg transition border border-gray-600">
+                        📁 {{ t('scanner.choose_file') }}
+                        <input type="file" name="file" accept="image/*" class="hidden" onchange="previewAndSubmit(this)" />
+                    </label>
+                </div>
+            </div>
+        </form>
+
+        <!-- Preview area -->
+        <div id="preview-area" class="hidden mt-4">
+            <img id="preview-img" class="w-full rounded-lg mb-3" />
+            <div class="flex gap-3">
+                <button onclick="submitUpload()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition">
+                    🔍 {{ t('scanner.process') }}
+                </button>
+                <button onclick="resetUpload()" class="bg-gray-700 hover:bg-gray-600 text-gray-300 py-3 px-4 rounded-lg transition">
+                    ↩ {{ t('scanner.retake') }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Processing spinner -->
+        <div id="processing" class="hidden mt-4 text-center py-8">
+            <div class="animate-spin text-4xl mb-3">⏳</div>
+            <p class="text-gray-300">{{ t('scanner.processing') }}</p>
+            <p class="text-gray-500 text-sm mt-1">{{ t('scanner.processing_hint') }}</p>
+        </div>
+    </div>
+</div>
+
+<script>
+let stream = null;
+
+async function startCamera() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+        });
+        const video = document.getElementById('camera-feed');
+        video.srcObject = stream;
+        document.getElementById('camera-area').classList.remove('hidden');
+    } catch (err) {
+        // Camera not available — fall back to file picker
+        document.querySelector('input[type="file"]').click();
+    }
+}
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+    }
+    document.getElementById('camera-area').classList.add('hidden');
+}
+
+function capturePhoto() {
+    const video = document.getElementById('camera-feed');
+    const canvas = document.getElementById('capture-canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+
+    stopCamera();
+
+    // Convert to blob and set as file input
+    canvas.toBlob(function(blob) {
+        const file = new File([blob], 'receipt.jpg', { type: 'image/jpeg' });
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.querySelector('input[type="file"]').files = dt.files;
+
+        // Show preview
+        document.getElementById('preview-img').src = canvas.toDataURL('image/jpeg');
+        document.getElementById('preview-area').classList.remove('hidden');
+    }, 'image/jpeg', 0.92);
+}
+
+function previewAndSubmit(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('preview-area').classList.remove('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function submitUpload() {
+    document.getElementById('preview-area').classList.add('hidden');
+    document.getElementById('processing').classList.remove('hidden');
+    document.getElementById('upload-form').submit();
+}
+
+function resetUpload() {
+    document.getElementById('preview-area').classList.add('hidden');
+    document.querySelector('input[type="file"]').value = '';
+}
+</script>
+{% endblock %}

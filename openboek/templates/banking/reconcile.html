@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Reconcile — {{ entity.name }} — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">🔗 Bank Reconciliation</h1>
+
+    {% if unmatched %}
+    <div class="space-y-4">
+        {% for tx in unmatched %}
+        <div class="bg-gray-900 rounded-lg border border-gray-800 p-4">
+            <div class="flex flex-wrap items-start justify-between gap-4 mb-3">
+                <div>
+                    <p class="font-medium">{{ tx.counterparty_name or 'Unknown' }}</p>
+                    <p class="text-sm text-gray-400">{{ tx.date }} · {{ tx.description or '—' }}</p>
+                </div>
+                <p class="text-lg font-mono {% if tx.amount >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                    €{{ "{:,.2f}".format(tx.amount) }}
+                </p>
+            </div>
+            <form method="POST" action="/entities/{{ entity.id }}/banking/reconcile/{{ tx.id }}/match"
+                class="flex gap-3 items-end">
+                <div class="flex-1">
+                    <label class="block text-xs text-gray-400 mb-1">Match to Journal Entry</label>
+                    <select name="journal_entry_id"
+                        class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
+                        {% for entry in entries %}
+                        <option value="{{ entry.id }}">{{ entry.date }} — {{ entry.description or entry.reference or 'No description' }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm transition whitespace-nowrap">
+                    Match
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
+        <p class="text-green-400 text-lg mb-2">✅ All caught up!</p>
+        <p class="text-gray-400">No unmatched bank transactions.</p>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="/entities/{{ entity.id }}/banking" class="text-green-400 hover:underline text-sm">← Back to Banking</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+# Fiscal Partnership (Fiscaal Partnerschap) Rules
+# Source: Belastingdienst
+
+fiscal_partnership:
+  title_nl: "Fiscaal Partnerschap"
+  title_en: "Fiscal Partnership"
+  legal_basis: "Art. 5a AWR, Art. 2.17 Wet IB 2001"
+
+  conditions:
+    - id: married
+      description_nl: "Gehuwd of geregistreerd partnerschap"
+      description_en: "Married or registered partnership"
+    - id: cohabiting
+      description_nl: "Samenwonend met notarieel samenlevingscontract + ingeschreven op hetzelfde adres"
+      description_en: "Cohabiting with notarial cohabitation agreement + registered at same address"
+    - id: cohabiting_child
+      description_nl: "Samenwonend + samen een kind"
+      description_en: "Cohabiting + have a child together"
+    - id: cohabiting_mortgage
+      description_nl: "Samenwonend + samen eigenaar van de woning"
+      description_en: "Cohabiting + joint homeowners"
+
+  allocatable_items:
+    - id: eigen_woning
+      name_nl: "Eigenwoningforfait + hypotheekrenteaftrek"
+      name_en: "Deemed rental value + mortgage interest deduction"
+      box: 1
+      constraint_nl: "Forfait en aftrek moeten naar dezelfde partner"
+      constraint_en: "Deemed value and deduction must go to the same partner"
+      coupled: true
+
+    - id: box3_vermogen
+      name_nl: "Box 3 vermogen (spaargeld + beleggingen)"
+      name_en: "Box 3 wealth (savings + investments)"
+      box: 3
+      constraint_nl: "Vrije verdeling; ieder behoudt eigen heffingsvrij vermogen (€57.000)"
+      constraint_en: "Free allocation; each keeps own tax-free threshold (€57,000)"
+
+    - id: giften
+      name_nl: "Giftenaftrek"
+      name_en: "Charitable donation deduction"
+      box: 1
+      constraint: null
+
+    - id: zorgkosten
+      name_nl: "Specifieke zorgkosten"
+      name_en: "Specific medical expenses"
+      box: 1
+      constraint: null
+
+    - id: studiekosten
+      name_nl: "Studiekosten / scholingsuitgaven"
+      name_en: "Study costs / educational expenses"
+      box: 1
+      constraint: null
+
+  optimization_strategy:
+    description_nl: >
+      Wijs aftrekposten toe aan de partner met het hoogste marginale tarief.
+      Dit maximaliseert de belastingbesparing. De eigenwoningregeling (forfait +
+      hypotheekrenteaftrek) moet als geheel naar één partner.
+    description_en: >
+      Assign deductions to the partner with the highest marginal tax rate.
+      This maximizes the tax saving. The owner-occupied home rules (deemed rental
+      value + mortgage interest deduction) must go to one partner as a whole.
+
+    steps_nl:
+      - "Bereken het marginale belastingtarief van beide partners"
+      - "Wijs de eigenwoningregeling toe aan de partner met het hoogste tarief"
+      - "Wijs overige aftrekposten toe aan de partner met het hoogste tarief"
+      - "Bereken de totale belasting bij optimale verdeling vs. 50/50"
+    steps_en:
+      - "Calculate the marginal tax rate of both partners"
+      - "Assign the owner-occupied home rules to the partner with the highest rate"
+      - "Assign other deductions to the partner with the highest rate"
+      - "Calculate total tax with optimal vs. 50/50 allocation"

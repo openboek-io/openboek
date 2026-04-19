@@ -1,0 +1,87 @@
+{% extends "wizard/base.html" %}
+{% block title %}{% if lang == 'en' %}Banking{% else %}Bankzaken{% endif %} — OpenBoek{% endblock %}
+
+{% block wizard_content %}
+<div class="mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">
+        {% if lang == 'en' %}Which bank do you use?{% else %}Bij welke bank zit je?{% endif %}
+    </h1>
+    <p class="text-gray-400">
+        {% if lang == 'en' %}
+        Select your bank(s) so we can set up the right import format. You'll connect your accounts later — 
+        we just need to know which bank to expect.
+        {% else %}
+        Selecteer je bank(en) zodat we het juiste importformaat instellen. Je koppelt je rekeningen later — 
+        we willen alleen weten welke bank we kunnen verwachten.
+        {% endif %}
+    </p>
+</div>
+
+<form method="POST" action="/wizard" class="space-y-6">
+    <input type="hidden" name="step" value="banking">
+
+    <div class="bg-gray-900 rounded-xl p-6 border border-gray-800">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {% set bank_options = [
+                ("ing", "ING", "🟠"),
+                ("rabo", "Rabobank", "🔵"),
+                ("abn", "ABN AMRO", "🟢"),
+                ("bunq", "bunq", "💚"),
+                ("knab", "Knab", "🟣"),
+                ("sns", "SNS", "🔴"),
+                ("triodos", "Triodos", "🌿"),
+                ("asn", "ASN Bank", "🌍"),
+                ("revolut", "Revolut", "💜"),
+                ("n26", "N26", "🏦"),
+                ("other", "{% if lang == 'en' %}Other{% else %}Andere{% endif %}", "🏦")
+            ] %}
+
+            {% for value, label, icon in bank_options %}
+            <label class="relative cursor-pointer">
+                <input type="checkbox" name="banks" value="{{ value }}" class="peer sr-only"
+                       {% if value in (wizard.banks or []) %}checked{% endif %}>
+                <div class="flex items-center gap-2 p-3 rounded-lg border-2 border-gray-700 
+                            peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition text-center justify-center">
+                    <span>{{ icon }}</span>
+                    <span class="font-medium text-sm text-white">{{ label }}</span>
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Info box -->
+    <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+        <p class="text-sm text-gray-400">
+            💡 {% if lang == 'en' %}
+            OpenBoek imports bank statements via MT940/CAMT.053 files that you download from your bank. 
+            We'll show you exactly how to do this for your specific bank after setup.
+            You can also use CSV exports from most banks.
+            {% else %}
+            OpenBoek importeert bankafschriften via MT940/CAMT.053-bestanden die je downloadt van je bank. 
+            We laten je na de setup precies zien hoe dit werkt voor jouw bank.
+            Je kunt ook CSV-exports van de meeste banken gebruiken.
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="flex justify-between">
+        {% set work = wizard.work_situation or [] %}
+        {% if 'bv' in work %}
+        <a href="/wizard?step=holding"
+        {% elif 'zzp' in work or 'bv' in work %}
+        <a href="/wizard?step=business"
+        {% else %}
+        <a href="/wizard?step=work"
+        {% endif %}
+           class="text-gray-400 hover:text-white py-3 px-6 rounded-lg transition flex items-center gap-2">
+            <span>←</span> {% if lang == 'en' %}Back{% else %}Terug{% endif %}
+        </a>
+        <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-8 rounded-lg transition flex items-center gap-2">
+            {% if lang == 'en' %}Next{% else %}Volgende{% endif %} <span>→</span>
+        </button>
+    </div>
+</form>
+{% endblock %}

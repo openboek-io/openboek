@@ -1,0 +1,599 @@
+name_nl: "Persoonlijk / Huishouden Grootboekschema"
+name_en: "Personal / Household Chart of Accounts"
+entity_type: personal
+description_nl: "Minimaal grootboekschema voor persoonlijke financiën en huishouden, gestructureerd naar IB-boxen"
+description_en: "Minimal chart of accounts for personal finance and household, structured by Dutch income tax boxes"
+
+accounts:
+  # ============================================================
+  # BEZITTINGEN (ASSETS)
+  # ============================================================
+
+  - code: "1000"
+    name_nl: "Kas"
+    name_en: "Cash"
+    type: asset
+
+  - code: "1100"
+    name_nl: "Bankrekeningen"
+    name_en: "Bank accounts"
+    type: asset
+    children:
+      - code: "1110"
+        name_nl: "Betaalrekening"
+        name_en: "Current account"
+        type: asset
+      - code: "1120"
+        name_nl: "Gezamenlijke rekening"
+        name_en: "Joint account"
+        type: asset
+      - code: "1130"
+        name_nl: "Betaalrekening partner"
+        name_en: "Partner current account"
+        type: asset
+
+  - code: "1200"
+    name_nl: "Spaarrekeningen"
+    name_en: "Savings accounts"
+    type: asset
+    ib_box: 3
+    children:
+      - code: "1210"
+        name_nl: "Spaarrekening"
+        name_en: "Savings account"
+        type: asset
+        ib_box: 3
+      - code: "1220"
+        name_nl: "Deposito"
+        name_en: "Term deposit"
+        type: asset
+        ib_box: 3
+      - code: "1230"
+        name_nl: "Spaarrekening partner"
+        name_en: "Partner savings account"
+        type: asset
+        ib_box: 3
+
+  - code: "1300"
+    name_nl: "Beleggingen"
+    name_en: "Investments"
+    type: asset
+    ib_box: 3
+    children:
+      - code: "1310"
+        name_nl: "Effectenrekening"
+        name_en: "Securities account"
+        type: asset
+        ib_box: 3
+      - code: "1320"
+        name_nl: "Crypto"
+        name_en: "Cryptocurrency"
+        type: asset
+        ib_box: 3
+      - code: "1330"
+        name_nl: "Effectenrekening partner"
+        name_en: "Partner securities account"
+        type: asset
+        ib_box: 3
+
+  - code: "1400"
+    name_nl: "Eigen woning"
+    name_en: "Owner-occupied home"
+    type: asset
+    ib_box: 1
+    children:
+      - code: "1410"
+        name_nl: "WOZ-waarde eigen woning"
+        name_en: "WOZ value owner-occupied home"
+        type: asset
+        ib_box: 1
+
+  - code: "1500"
+    name_nl: "Overig onroerend goed"
+    name_en: "Other real estate"
+    type: asset
+    ib_box: 3
+
+  - code: "1600"
+    name_nl: "Vorderingen"
+    name_en: "Receivables"
+    type: asset
+    children:
+      - code: "1610"
+        name_nl: "Teruggave Belastingdienst"
+        name_en: "Tax refund receivable"
+        type: asset
+      - code: "1620"
+        name_nl: "Toeslagen (huurtoeslag, zorgtoeslag)"
+        name_en: "Allowances (housing, healthcare)"
+        type: asset
+
+  # ============================================================
+  # SCHULDEN (LIABILITIES)
+  # ============================================================
+
+  - code: "2000"
+    name_nl: "Hypotheek eigen woning"
+    name_en: "Mortgage owner-occupied home"
+    type: liability
+    ib_box: 1
+    children:
+      - code: "2010"
+        name_nl: "Hypotheek (annuïtair)"
+        name_en: "Mortgage (annuity)"
+        type: liability
+        ib_box: 1
+      - code: "2020"
+        name_nl: "Hypotheek (lineair)"
+        name_en: "Mortgage (linear)"
+        type: liability
+        ib_box: 1
+
+  - code: "2100"
+    name_nl: "Studielening"
+    name_en: "Student loan"
+    type: liability
+    ib_box: 3
+
+  - code: "2200"
+    name_nl: "Persoonlijke leningen"
+    name_en: "Personal loans"
+    type: liability
+    ib_box: 3
+
+  - code: "2300"
+    name_nl: "Creditcard schuld"
+    name_en: "Credit card debt"
+    type: liability
+
+  - code: "2400"
+    name_nl: "Belastingschuld"
+    name_en: "Tax liability"
+    type: liability
+
+  # ============================================================
+  # EIGEN VERMOGEN
+  # ============================================================
+
+  - code: "0900"
+    name_nl: "Eigen vermogen"
+    name_en: "Net worth / equity"
+    type: equity
+    children:
+      - code: "0910"
+        name_nl: "Beginvermogen"
+        name_en: "Opening net worth"
+        type: equity
+      - code: "0920"
+        name_nl: "Resultaat lopend jaar"
+        name_en: "Current year result"
+        type: equity
+
+  # ============================================================
+  # INKOMSTEN — BOX 1: Werk en woning
+  # ============================================================
+
+  - code: "8000"
+    name_nl: "Box 1 — Werk en woning"
+    name_en: "Box 1 — Employment and home"
+    type: revenue
+    ib_box: 1
+    children:
+      - code: "8010"
+        name_nl: "Loon uit dienstbetrekking"
+        name_en: "Employment income (salary)"
+        type: revenue
+        ib_box: 1
+      - code: "8020"
+        name_nl: "Nettoloon (na loonheffing)"
+        name_en: "Net salary (after payroll tax)"
+        type: revenue
+        ib_box: 1
+      - code: "8030"
+        name_nl: "Winst uit onderneming"
+        name_en: "Business profit"
+        type: revenue
+        ib_box: 1
+      - code: "8040"
+        name_nl: "Resultaat overig werk"
+        name_en: "Income from other activities"
+        type: revenue
+        ib_box: 1
+      - code: "8050"
+        name_nl: "Eigenwoningforfait"
+        name_en: "Deemed rental value own home"
+        type: revenue
+        ib_box: 1
+      - code: "8060"
+        name_nl: "Pensioen / AOW / uitkering"
+        name_en: "Pension / state pension / benefits"
+        type: revenue
+        ib_box: 1
+      - code: "8070"
+        name_nl: "Freelance / ZZP inkomsten"
+        name_en: "Freelance / sole proprietor income"
+        type: revenue
+        ib_box: 1
+
+  # ============================================================
+  # INKOMSTEN — BOX 2: Aanmerkelijk belang
+  # ============================================================
+
+  - code: "8200"
+    name_nl: "Box 2 — Aanmerkelijk belang"
+    name_en: "Box 2 — Substantial interest"
+    type: revenue
+    ib_box: 2
+    children:
+      - code: "8210"
+        name_nl: "Dividend uit BV"
+        name_en: "Dividend from BV"
+        type: revenue
+        ib_box: 2
+      - code: "8220"
+        name_nl: "Vervreemdingsvoordelen AB"
+        name_en: "Capital gains on substantial interest"
+        type: revenue
+        ib_box: 2
+
+  # ============================================================
+  # INKOMSTEN — BOX 3: Sparen en beleggen
+  # ============================================================
+
+  - code: "8300"
+    name_nl: "Box 3 — Sparen en beleggen"
+    name_en: "Box 3 — Savings and investments"
+    type: revenue
+    ib_box: 3
+    children:
+      - code: "8310"
+        name_nl: "Forfaitair rendement sparen"
+        name_en: "Deemed return on savings"
+        type: revenue
+        ib_box: 3
+      - code: "8320"
+        name_nl: "Forfaitair rendement beleggen"
+        name_en: "Deemed return on investments"
+        type: revenue
+        ib_box: 3
+      - code: "8330"
+        name_nl: "Werkelijk rendement (vanaf 2027)"
+        name_en: "Actual return (from 2027)"
+        type: revenue
+        ib_box: 3
+
+  # ============================================================
+  # INKOMSTEN — OVERIG
+  # ============================================================
+
+  - code: "8500"
+    name_nl: "Overige inkomsten"
+    name_en: "Other income"
+    type: revenue
+    children:
+      - code: "8510"
+        name_nl: "Toeslagen (huur, zorg, kind)"
+        name_en: "Government allowances"
+        type: revenue
+      - code: "8520"
+        name_nl: "Ontvangen alimentatie"
+        name_en: "Alimony received"
+        type: revenue
+      - code: "8530"
+        name_nl: "Schenkingen / erfenissen"
+        name_en: "Gifts / inheritance received"
+        type: revenue
+      - code: "8540"
+        name_nl: "Verkoop privébezit"
+        name_en: "Sale of personal property"
+        type: revenue
+
+  # ============================================================
+  # UITGAVEN — VASTE LASTEN
+  # ============================================================
+
+  - code: "4000"
+    name_nl: "Woonlasten"
+    name_en: "Housing expenses"
+    type: expense
+    children:
+      - code: "4010"
+        name_nl: "Huur / hypotheeklasten"
+        name_en: "Rent / mortgage payments"
+        type: expense
+      - code: "4020"
+        name_nl: "Hypotheekrente (aftrekbaar)"
+        name_en: "Mortgage interest (deductible)"
+        type: expense
+        ib_box: 1
+        deductible: true
+      - code: "4030"
+        name_nl: "Energie (gas, elektra)"
+        name_en: "Energy (gas, electricity)"
+        type: expense
+      - code: "4040"
+        name_nl: "Water"
+        name_en: "Water"
+        type: expense
+      - code: "4050"
+        name_nl: "Gemeentelijke belastingen"
+        name_en: "Municipal taxes"
+        type: expense
+      - code: "4060"
+        name_nl: "Opstalverzekering"
+        name_en: "Building insurance"
+        type: expense
+      - code: "4070"
+        name_nl: "Onderhoud woning"
+        name_en: "Home maintenance"
+        type: expense
+
+  - code: "4100"
+    name_nl: "Verzekeringen"
+    name_en: "Insurance"
+    type: expense
+    children:
+      - code: "4110"
+        name_nl: "Zorgverzekering (basis + aanvullend)"
+        name_en: "Health insurance (basic + supplementary)"
+        type: expense
+      - code: "4120"
+        name_nl: "Inboedelverzekering"
+        name_en: "Contents insurance"
+        type: expense
+      - code: "4130"
+        name_nl: "Aansprakelijkheidsverzekering"
+        name_en: "Liability insurance"
+        type: expense
+      - code: "4140"
+        name_nl: "Autoverzekering"
+        name_en: "Car insurance"
+        type: expense
+      - code: "4150"
+        name_nl: "Reisverzekering"
+        name_en: "Travel insurance"
+        type: expense
+      - code: "4190"
+        name_nl: "Overige verzekeringen"
+        name_en: "Other insurance"
+        type: expense
+
+  # ============================================================
+  # UITGAVEN — DAGELIJKS LEVEN
+  # ============================================================
+
+  - code: "4200"
+    name_nl: "Dagelijkse uitgaven"
+    name_en: "Daily expenses"
+    type: expense
+    children:
+      - code: "4210"
+        name_nl: "Boodschappen"
+        name_en: "Groceries"
+        type: expense
+      - code: "4220"
+        name_nl: "Uit eten / bezorging"
+        name_en: "Dining out / delivery"
+        type: expense
+      - code: "4230"
+        name_nl: "Kleding en schoenen"
+        name_en: "Clothing and shoes"
+        type: expense
+      - code: "4240"
+        name_nl: "Persoonlijke verzorging"
+        name_en: "Personal care"
+        type: expense
+      - code: "4250"
+        name_nl: "Huishoudelijke artikelen"
+        name_en: "Household items"
+        type: expense
+
+  - code: "4300"
+    name_nl: "Vervoer"
+    name_en: "Transport"
+    type: expense
+    children:
+      - code: "4310"
+        name_nl: "Brandstof"
+        name_en: "Fuel"
+        type: expense
+      - code: "4320"
+        name_nl: "OV (trein, bus, metro)"
+        name_en: "Public transport"
+        type: expense
+      - code: "4330"
+        name_nl: "Auto onderhoud en APK"
+        name_en: "Car maintenance and MOT"
+        type: expense
+      - code: "4340"
+        name_nl: "Wegenbelasting"
+        name_en: "Road tax"
+        type: expense
+      - code: "4350"
+        name_nl: "Parkeren"
+        name_en: "Parking"
+        type: expense
+
+  - code: "4400"
+    name_nl: "Abonnementen en telecom"
+    name_en: "Subscriptions and telecom"
+    type: expense
+    children:
+      - code: "4410"
+        name_nl: "Telefoon (mobiel)"
+        name_en: "Mobile phone"
+        type: expense
+      - code: "4420"
+        name_nl: "Internet en TV"
+        name_en: "Internet and TV"
+        type: expense
+      - code: "4430"
+        name_nl: "Streaming (Netflix, Spotify)"
+        name_en: "Streaming services"
+        type: expense
+      - code: "4440"
+        name_nl: "Kranten en tijdschriften"
+        name_en: "Newspapers and magazines"
+        type: expense
+      - code: "4450"
+        name_nl: "Overige abonnementen"
+        name_en: "Other subscriptions"
+        type: expense
+
+  # ============================================================
+  # UITGAVEN — VRIJE TIJD
+  # ============================================================
+
+  - code: "4500"
+    name_nl: "Vrije tijd en ontspanning"
+    name_en: "Leisure and recreation"
+    type: expense
+    children:
+      - code: "4510"
+        name_nl: "Vakantie"
+        name_en: "Vacation / holidays"
+        type: expense
+      - code: "4520"
+        name_nl: "Sport en fitness"
+        name_en: "Sports and fitness"
+        type: expense
+      - code: "4530"
+        name_nl: "Cultuur en uitgaan"
+        name_en: "Culture and entertainment"
+        type: expense
+      - code: "4540"
+        name_nl: "Hobby's"
+        name_en: "Hobbies"
+        type: expense
+      - code: "4550"
+        name_nl: "Cadeaus en feesten"
+        name_en: "Gifts and celebrations"
+        type: expense
+
+  # ============================================================
+  # UITGAVEN — KINDEREN
+  # ============================================================
+
+  - code: "4600"
+    name_nl: "Kinderen"
+    name_en: "Children"
+    type: expense
+    children:
+      - code: "4610"
+        name_nl: "Kinderopvang"
+        name_en: "Childcare"
+        type: expense
+      - code: "4620"
+        name_nl: "School en opleiding"
+        name_en: "School and education"
+        type: expense
+      - code: "4630"
+        name_nl: "Activiteiten en sport kinderen"
+        name_en: "Children activities and sports"
+        type: expense
+      - code: "4640"
+        name_nl: "Kleding en spullen kinderen"
+        name_en: "Children clothing and items"
+        type: expense
+
+  # ============================================================
+  # AFTREKPOSTEN (IB)
+  # ============================================================
+
+  - code: "4700"
+    name_nl: "Aftrekbare uitgaven"
+    name_en: "Tax-deductible expenses"
+    type: expense
+    children:
+      - code: "4710"
+        name_nl: "Hypotheekrente eigen woning"
+        name_en: "Mortgage interest own home"
+        type: expense
+        ib_box: 1
+        deductible: true
+      - code: "4720"
+        name_nl: "Specifieke zorgkosten"
+        name_en: "Specific medical expenses"
+        type: expense
+        ib_box: 1
+        deductible: true
+        note_nl: "Boven drempel, niet vergoed door verzekering"
+        note_en: "Above threshold, not reimbursed by insurance"
+      - code: "4730"
+        name_nl: "Studiekosten en scholing"
+        name_en: "Education and study expenses"
+        type: expense
+        ib_box: 1
+        deductible: true
+        note_nl: "STAP-budget vervangt deels de scholingsaftrek"
+        note_en: "STAP budget partially replaces study deduction"
+      - code: "4740"
+        name_nl: "Giften aan ANBI / SBBI"
+        name_en: "Charitable donations (ANBI/SBBI)"
+        type: expense
+        ib_box: 1
+        deductible: true
+        note_nl: "Periodieke giften volledig, overige boven drempel"
+        note_en: "Periodic gifts fully deductible, others above threshold"
+      - code: "4750"
+        name_nl: "Betaalde alimentatie"
+        name_en: "Alimony paid"
+        type: expense
+        ib_box: 1
+        deductible: true
+      - code: "4760"
+        name_nl: "Lijfrentepremies"
+        name_en: "Annuity premiums"
+        type: expense
+        ib_box: 1
+        deductible: true
+        note_nl: "Jaarruimte en reserveringsruimte"
+        note_en: "Annual allowance and catch-up allowance"
+
+  # ============================================================
+  # UITGAVEN — BELASTINGEN
+  # ============================================================
+
+  - code: "4800"
+    name_nl: "Belastingen betaald"
+    name_en: "Taxes paid"
+    type: expense
+    children:
+      - code: "4810"
+        name_nl: "Inkomstenbelasting"
+        name_en: "Income tax"
+        type: expense
+      - code: "4820"
+        name_nl: "Premie volksverzekeringen"
+        name_en: "National insurance contributions"
+        type: expense
+      - code: "4830"
+        name_nl: "Premie ZVW (zorgverzekeringswet)"
+        name_en: "Healthcare insurance act contribution"
+        type: expense
+      - code: "4890"
+        name_nl: "Overige belastingen"
+        name_en: "Other taxes"
+        type: expense
+
+  # ============================================================
+  # UITGAVEN — FINANCIEEL
+  # ============================================================
+
+  - code: "4900"
+    name_nl: "Financiële kosten"
+    name_en: "Financial expenses"
+    type: expense
+    children:
+      - code: "4910"
+        name_nl: "Bankkosten"
+        name_en: "Bank charges"
+        type: expense
+      - code: "4920"
+        name_nl: "Rente leningen (niet-hypotheek)"
+        name_en: "Loan interest (non-mortgage)"
+        type: expense
+      - code: "4930"
+        name_nl: "Rente creditcard"
+        name_en: "Credit card interest"
+        type: expense

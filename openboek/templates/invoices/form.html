@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}New Invoice — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">🧾 New Invoice</h1>
+
+    {% if error %}
+    <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg mb-4">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/entities/{{ entity.id }}/invoices" class="space-y-6">
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Type</label>
+                    <select name="invoice_type"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white">
+                        <option value="sales">Sales</option>
+                        <option value="purchase">Purchase</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Invoice Number</label>
+                    <input type="text" name="invoice_number" required
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Date</label>
+                    <input type="date" name="date" required
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Due Date</label>
+                    <input type="date" name="due_date"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Counterparty</label>
+                    <input type="text" name="counterparty_name" required
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Counterparty VAT</label>
+                    <input type="text" name="counterparty_vat"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Lines -->
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h2 class="text-lg font-semibold mb-4">Line Items</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-800">
+                            <th class="text-left px-2 py-2 text-gray-400">Description</th>
+                            <th class="text-right px-2 py-2 text-gray-400">Qty</th>
+                            <th class="text-right px-2 py-2 text-gray-400">Price</th>
+                            <th class="text-right px-2 py-2 text-gray-400">BTW %</th>
+                            <th class="text-left px-2 py-2 text-gray-400">Account</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in range(3) %}
+                        <tr class="border-b border-gray-800/50">
+                            <td class="px-2 py-2">
+                                <input type="text" name="line_desc_{{ i }}"
+                                    class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white">
+                            </td>
+                            <td class="px-2 py-2">
+                                <input type="number" name="line_qty_{{ i }}" step="0.001" value="1"
+                                    class="w-20 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white text-right">
+                            </td>
+                            <td class="px-2 py-2">
+                                <input type="number" name="line_price_{{ i }}" step="0.01"
+                                    class="w-24 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white text-right">
+                            </td>
+                            <td class="px-2 py-2">
+                                <input type="number" name="line_btw_{{ i }}" step="0.01" value="21"
+                                    class="w-20 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white text-right">
+                            </td>
+                            <td class="px-2 py-2">
+                                <select name="line_account_{{ i }}"
+                                    class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white">
+                                    <option value="">—</option>
+                                    {% for acc in accounts %}
+                                    <option value="{{ acc.id }}">{{ acc.code }} — {% if lang == 'en' %}{{ acc.name_en }}{% else %}{{ acc.name_nl }}{% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition">
+                {{ t('action.create') }} Invoice
+            </button>
+            <a href="/entities/{{ entity.id }}/invoices"
+                class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition">
+                {{ t('action.cancel') }}
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

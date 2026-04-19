@@ -1,0 +1,100 @@
+# Dutch Tax Rates 2026
+# Source: Belastingdienst / Belastingplan 2026
+
+ib:
+  title_nl: "Inkomstenbelasting 2026"
+  title_en: "Income Tax 2026"
+  box1:
+    brackets:
+      - max_income: 38441
+        rate: 0.3597
+        description_nl: "36,97% over de eerste €38.441"
+        description_en: "36.97% on the first €38,441"
+      - max_income: 76817
+        rate: 0.3697
+        description_nl: "36,97% over €38.441 – €76.817"
+        description_en: "36.97% on €38,441 – €76,817"
+      - max_income: null
+        rate: 0.4950
+        description_nl: "49,50% boven €76.817"
+        description_en: "49.50% above €76,817"
+    heffingskortingen:
+      algemene_heffingskorting:
+        max_amount: 3362
+        income_afbouw_start: 24813
+        afbouw_pct: 0.06337
+        description_nl: "Algemene heffingskorting: max €3.362, afbouw boven €24.813"
+        description_en: "General tax credit: max €3,362, phases out above €24,813"
+      arbeidskorting:
+        max_amount: 5532
+        income_start: 11491
+        income_afbouw_start: 39958
+        afbouw_pct: 0.06510
+        description_nl: "Arbeidskorting: max €5.532"
+        description_en: "Employment tax credit: max €5,532"
+
+  box2:
+    brackets:
+      - max_income: 67000
+        rate: 0.2450
+        description_nl: "24,5% over de eerste €67.000"
+        description_en: "24.5% on the first €67,000"
+      - max_income: null
+        rate: 0.3300
+        description_nl: "33% boven €67.000"
+        description_en: "33% above €67,000"
+    description_nl: "Inkomen uit aanmerkelijk belang (AB)"
+    description_en: "Income from substantial interest"
+
+  box3:
+    heffingsvrij_vermogen: 57000
+    heffingsvrij_vermogen_partner: 57000
+    rate: 0.36
+    description_nl: "Vermogensrendementsheffing: 36% over forfaitair rendement"
+    description_en: "Wealth tax: 36% on deemed return"
+    forfaitair_rendement:
+      spaargeld: 0.0136
+      beleggingen: 0.0633
+      schulden: 0.0265
+
+vpb:
+  title_nl: "Vennootschapsbelasting 2026"
+  title_en: "Corporate Income Tax 2026"
+  brackets:
+    - max_amount: 200000
+      rate: 0.19
+      description_nl: "19% over de eerste €200.000 belastbare winst"
+      description_en: "19% on the first €200,000 taxable profit"
+    - max_amount: null
+      rate: 0.258
+      description_nl: "25,8% over het meerdere boven €200.000"
+      description_en: "25.8% on profit above €200,000"
+
+btw:
+  title_nl: "BTW-tarieven 2026"
+  title_en: "VAT Rates 2026"
+  rates:
+    hoog:
+      rate: 0.21
+      description_nl: "Hoog tarief: 21%"
+      description_en: "Standard rate: 21%"
+    laag:
+      rate: 0.09
+      description_nl: "Laag tarief: 9%"
+      description_en: "Reduced rate: 9%"
+    nul:
+      rate: 0.00
+      description_nl: "Nultarief: 0%"
+      description_en: "Zero rate: 0%"
+  kor_drempel: 20000
+  kor_description_nl: "Kleine Ondernemersregeling (KOR): vrijstelling onder €20.000 omzet"
+  kor_description_en: "Small Business Scheme (KOR): exemption below €20,000 turnover"
+
+dividendbelasting:
+  rate: 0.1526
+  description_nl: "Dividendbelasting: 15,26%"
+  description_en: "Dividend withholding tax: 15.26%"
+
+ab_heffing:
+  description_nl: "Aanmerkelijk belang heffing via Box 2 IB"
+  description_en: "Substantial interest taxed via Box 2 income tax"

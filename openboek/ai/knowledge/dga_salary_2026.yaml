@@ -1,0 +1,73 @@
+# DGA Salary (Gebruikelijk Loon) Rules 2026
+# Source: Belastingdienst
+
+dga_salary:
+  title_nl: "Gebruikelijk loon DGA 2026"
+  title_en: "DGA Notional Salary 2026"
+  minimum_2026: 56000
+  legal_basis: "Art. 12a Wet LB 1964"
+
+  rules:
+    - id: standard_rule
+      description_nl: >
+        Het gebruikelijk loon is minimaal het hoogste van:
+        1. €56.000 (2026)
+        2. 75% van het loon van de meest vergelijkbare dienstbetrekking
+        3. Het loon van de best betaalde werknemer van de BV
+      description_en: >
+        The notional salary is at minimum the highest of:
+        1. €56,000 (2026)
+        2. 75% of the salary of the most comparable employment
+        3. The salary of the highest-paid employee of the BV
+      risk_level: safe
+
+    - id: lower_salary_conditions
+      description_nl: >
+        Een lager loon dan €56.000 is mogelijk als:
+        - De BV verlieslatend is en het loon niet betaald kan worden
+        - De omzet en winst te laag zijn om het minimum te rechtvaardigen
+        Dit moet onderbouwd worden bij de Belastingdienst.
+      description_en: >
+        A salary below €56,000 is possible if:
+        - The BV is loss-making and cannot pay the salary
+        - Revenue and profit are too low to justify the minimum
+        This must be substantiated to the tax authority.
+      risk_level: gray_area
+      legal_basis: "Art. 12a lid 3 Wet LB 1964"
+
+  optimization_strategies:
+    - id: minimize_to_threshold
+      description_nl: "DGA-loon op minimumgrens zetten (€56k) bij lage winst"
+      description_en: "Set DGA salary to minimum threshold (€56k) for low profit"
+      rationale_nl: "Minder loonbelasting, meer winst in BV tegen 19% VPB"
+      rationale_en: "Less wage tax, more profit in BV at 19% CIT rate"
+      risk_level: safe
+      condition: "bv_profit < 200000"
+
+    - id: dividend_vs_salary_split
+      description_nl: "Optimale mix van DGA-loon en dividend"
+      description_en: "Optimal mix of DGA salary and dividend"
+      rationale_nl: >
+        Dividend wordt belast in Box 2 (24,5%/33%), terwijl salaris in Box 1
+        wordt belast (tot 49,5%). Door het salaris laag te houden en dividend
+        uit te keren, kan de totale belastingdruk lager zijn.
+      rationale_en: >
+        Dividends are taxed in Box 2 (24.5%/33%), while salary is taxed in
+        Box 1 (up to 49.5%). By keeping salary low and distributing dividends,
+        the total tax burden can be lower.
+      risk_level: commonly_accepted
+
+    - id: management_fee_optimization
+      description_nl: "Managementfee van werkmaatschappij naar holding"
+      description_en: "Management fee from operating company to holding"
+      rationale_nl: >
+        Door een managementfee te factureren van je holding aan de werkmaatschappij,
+        wordt de winst in de werkmaatschappij verlaagd. De fee is bij de holding
+        omzet, maar door de deelnemingsvrijstelling zijn dividenden belastingvrij.
+      rationale_en: >
+        By charging a management fee from your holding to the operating company,
+        you reduce profit in the operating company. The fee is revenue for the
+        holding, but through the participation exemption, dividends are tax-free.
+      risk_level: safe
+      condition: "has_holding_structure"
+      legal_basis: "Art. 13 Wet Vpb 1969 (deelnemingsvrijstelling)"

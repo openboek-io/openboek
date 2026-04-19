@@ -1,0 +1,112 @@
+{% extends "wizard/base.html" %}
+{% block title %}{% if lang == 'en' %}VAT / BTW{% else %}BTW{% endif %} — OpenBoek{% endblock %}
+
+{% block wizard_content %}
+<div class="mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">
+        {% if lang == 'en' %}Do you charge VAT (BTW)?{% else %}Breng je BTW in rekening?{% endif %}
+    </h1>
+    <p class="text-gray-400">
+        {% if lang == 'en' %}
+        This determines how we set up your tax accounts and filing reminders.
+        {% else %}
+        Dit bepaalt hoe we je belastingrekeningen en aangifteherinneringen instellen.
+        {% endif %}
+    </p>
+</div>
+
+<form method="POST" action="/wizard" class="space-y-6">
+    <input type="hidden" name="step" value="btw">
+
+    <!-- BTW status -->
+    <div class="bg-gray-900 rounded-xl p-6 border border-gray-800 space-y-3">
+        <label class="block text-sm font-medium text-gray-300 mb-3">
+            {% if lang == 'en' %}Your VAT status{% else %}Je BTW-status{% endif %}
+        </label>
+
+        {% set btw_options = [
+            ("standard", "✅", "Standaard BTW-plichtig", "Standard VAT registered", 
+             "Je brengt BTW in rekening en doet periodiek aangifte.", 
+             "You charge VAT and file periodic returns."),
+            ("kor", "🏷️", "KOR (Kleineondernemersregeling)", "KOR (Small Business Scheme)", 
+             "Omzet onder €20.000/jaar — geen BTW, maar ook geen vooraftrek.", 
+             "Revenue under €20,000/year — no VAT, but also no input tax deduction."),
+            ("exempt", "🏥", "Vrijgesteld (medisch, onderwijs, etc.)", "Exempt (medical, education, etc.)", 
+             "Bepaalde beroepen zijn vrijgesteld van BTW.", 
+             "Certain professions are exempt from VAT.")
+        ] %}
+
+        {% for value, icon, label_nl, label_en, desc_nl, desc_en in btw_options %}
+        <label class="relative cursor-pointer block">
+            <input type="radio" name="btw_status" value="{{ value }}" class="peer sr-only"
+                   {% if wizard.btw_status == value or (not wizard.btw_status and value == 'standard') %}checked{% endif %}>
+            <div class="flex items-start gap-4 p-4 rounded-lg border-2 border-gray-700 
+                        peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition">
+                <span class="text-xl mt-0.5">{{ icon }}</span>
+                <div>
+                    <div class="font-medium text-white">
+                        {% if lang == 'en' %}{{ label_en }}{% else %}{{ label_nl }}{% endif %}
+                    </div>
+                    <div class="text-sm text-gray-400 mt-1">
+                        {% if lang == 'en' %}{{ desc_en }}{% else %}{{ desc_nl }}{% endif %}
+                    </div>
+                </div>
+            </div>
+        </label>
+        {% endfor %}
+    </div>
+
+    <!-- BTW frequency (only for standard) -->
+    <div class="bg-gray-900 rounded-xl p-6 border border-gray-800 space-y-3">
+        <label class="block text-sm font-medium text-gray-300 mb-3">
+            {% if lang == 'en' %}How often do you file?{% else %}Hoe vaak doe je aangifte?{% endif %}
+        </label>
+
+        <div class="grid grid-cols-3 gap-3">
+            {% set freq_options = [
+                ("monthly", "Maandelijks", "Monthly"),
+                ("quarterly", "Per kwartaal", "Quarterly"),
+                ("yearly", "Jaarlijks", "Yearly")
+            ] %}
+
+            {% for value, label_nl, label_en in freq_options %}
+            <label class="relative cursor-pointer">
+                <input type="radio" name="btw_frequency" value="{{ value }}" class="peer sr-only"
+                       {% if wizard.btw_frequency == value or (not wizard.btw_frequency and value == 'quarterly') %}checked{% endif %}>
+                <div class="flex items-center justify-center p-3 rounded-lg border-2 border-gray-700 
+                            peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition">
+                    <span class="text-sm font-medium">{% if lang == 'en' %}{{ label_en }}{% else %}{{ label_nl }}{% endif %}</span>
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+
+        <!-- Info box -->
+        <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-4 mt-4">
+            <p class="text-sm text-gray-400">
+                💡 {% if lang == 'en' %}
+                Most small businesses file <strong>quarterly</strong>. Monthly filing is required if your VAT payments 
+                exceed a certain threshold, or you can request it voluntarily. If you use the KOR or are exempt, 
+                you don't need to file BTW returns.
+                {% else %}
+                De meeste kleine bedrijven doen <strong>per kwartaal</strong> aangifte. Maandelijks is verplicht als je 
+                BTW-afdracht boven een bepaalde drempel uitkomt, of je kunt het vrijwillig aanvragen. Als je de KOR 
+                gebruikt of bent vrijgesteld, hoef je geen BTW-aangifte te doen.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="flex justify-between">
+        <a href="/wizard?step=banking"
+           class="text-gray-400 hover:text-white py-3 px-6 rounded-lg transition flex items-center gap-2">
+            <span>←</span> {% if lang == 'en' %}Back{% else %}Terug{% endif %}
+        </a>
+        <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-8 rounded-lg transition flex items-center gap-2">
+            {% if lang == 'en' %}Next{% else %}Volgende{% endif %} <span>→</span>
+        </button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{% if entry %}Edit Entry{% else %}New Journal Entry{% endif %} — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">
+        {% if entry %}📖 Edit Journal Entry{% else %}📖 New Journal Entry{% endif %}
+    </h1>
+
+    {% if error %}
+    <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg mb-4">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/entities/{{ entity.id }}/journal" id="journal-form" class="space-y-6">
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Date</label>
+                    <input type="date" name="date" required
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                    <input type="text" name="description"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Reference</label>
+                    <input type="text" name="reference"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+            </div>
+        </div>
+
+        <!-- Journal Lines -->
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h2 class="text-lg font-semibold mb-4">Lines</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm" id="lines-table">
+                    <thead>
+                        <tr class="border-b border-gray-800">
+                            <th class="text-left px-2 py-2 text-gray-400">Account</th>
+                            <th class="text-left px-2 py-2 text-gray-400">Description</th>
+                            <th class="text-right px-2 py-2 text-gray-400">Debit</th>
+                            <th class="text-right px-2 py-2 text-gray-400">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lines-body">
+                        {% for i in range(4) %}
+                        <tr class="border-b border-gray-800/50">
+                            <td class="px-2 py-2">
+                                <select name="line_account_{{ i }}"
+                                    class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white">
+                                    <option value="">— Select —</option>
+                                    {% for acc in accounts %}
+                                    <option value="{{ acc.id }}">{{ acc.code }} — {% if lang == 'en' %}{{ acc.name_en }}{% else %}{{ acc.name_nl }}{% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td class="px-2 py-2">
+                                <input type="text" name="line_desc_{{ i }}"
+                                    class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white">
+                            </td>
+                            <td class="px-2 py-2">
+                                <input type="number" name="line_debit_{{ i }}" step="0.01" min="0"
+                                    class="w-24 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white text-right">
+                            </td>
+                            <td class="px-2 py-2">
+                                <input type="number" name="line_credit_{{ i }}" step="0.01" min="0"
+                                    class="w-24 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white text-right">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">⚠️ Debit must equal Credit. The entry will be rejected if they don't balance.</p>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition">
+                {{ t('action.save') }} (Draft)
+            </button>
+            <a href="/entities/{{ entity.id }}/journal"
+                class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition">
+                {{ t('action.cancel') }}
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

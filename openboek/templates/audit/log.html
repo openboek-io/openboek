@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Audit Log — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">🔍 {{ t('nav.audit') }}{% if entity %} — {{ entity.name }}{% endif %}</h1>
+
+    {% if entries %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-800 bg-gray-900/50">
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Time</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Action</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Table</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">IP</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800">
+                {% for entry in entries %}
+                <tr class="hover:bg-gray-800/50">
+                    <td class="px-4 py-2 font-mono text-gray-300 text-xs">
+                        {{ entry.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </td>
+                    <td class="px-4 py-2">
+                        <span class="text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-300">{{ entry.action }}</span>
+                    </td>
+                    <td class="px-4 py-2 text-gray-400">{{ entry.table_name or '—' }}</td>
+                    <td class="px-4 py-2 text-gray-500 font-mono text-xs">{{ entry.ip_address or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="flex justify-between mt-4 text-sm">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}" class="text-green-400 hover:underline">← Previous</a>
+        {% else %}
+        <span></span>
+        {% endif %}
+        <span class="text-gray-500">Page {{ page }}</span>
+        {% if entries | length == 50 %}
+        <a href="?page={{ page + 1 }}" class="text-green-400 hover:underline">Next →</a>
+        {% else %}
+        <span></span>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
+        <p class="text-gray-400">No audit entries recorded yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

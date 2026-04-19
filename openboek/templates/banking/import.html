@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Import MT940 — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">📥 Import Bank Statement (MT940)</h1>
+
+    {% if error %}
+    <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg mb-4">{{ error }}</div>
+    {% endif %}
+
+    {% if imported_count is defined %}
+    <div class="bg-green-900/50 border border-green-700 text-green-300 px-4 py-3 rounded-lg mb-4">
+        ✅ Imported {{ imported_count }} transactions. Skipped {{ skipped_count }} duplicates.
+    </div>
+    {% endif %}
+
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-6 mb-6">
+        <form method="POST" action="/entities/{{ entity.id }}/banking/import" enctype="multipart/form-data" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Bank Account</label>
+                <select name="bank_account_id" required
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white">
+                    {% for acc in bank_accounts %}
+                    <option value="{{ acc.id }}">{{ acc.name }} ({{ acc.iban }})</option>
+                    {% endfor %}
+                </select>
+                {% if not bank_accounts %}
+                <p class="text-xs text-yellow-400 mt-1">⚠️ No bank accounts. <a href="/entities/{{ entity.id }}/banking" class="underline">Add one first</a>.</p>
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">MT940 File</label>
+                <input type="file" name="file" accept=".sta,.mt940,.940,.txt" required
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:text-sm file:bg-green-600 file:text-white hover:file:bg-green-700">
+            </div>
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
+                {% if not bank_accounts %}disabled{% endif %}>
+                Upload & Import
+            </button>
+        </form>
+    </div>
+
+    {% if preview %}
+    <h2 class="text-lg font-semibold mb-4">Imported Transactions</h2>
+    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-800 bg-gray-900/50">
+                    <th class="text-left px-4 py-3 text-gray-400">Date</th>
+                    <th class="text-left px-4 py-3 text-gray-400">Counterparty</th>
+                    <th class="text-right px-4 py-3 text-gray-400">Amount</th>
+                    <th class="text-left px-4 py-3 text-gray-400">Reference</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800">
+                {% for tx in preview %}
+                <tr>
+                    <td class="px-4 py-2 font-mono">{{ tx.date }}</td>
+                    <td class="px-4 py-2">{{ tx.counterparty_name or '—' }}</td>
+                    <td class="px-4 py-2 text-right font-mono {% if tx.amount >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        €{{ "{:,.2f}".format(tx.amount) }}
+                    </td>
+                    <td class="px-4 py-2 text-gray-400">{{ tx.reference or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="/entities/{{ entity.id }}/banking" class="text-green-400 hover:underline text-sm">← Back to Banking</a>
+    </div>
+</div>
+{% endblock %}

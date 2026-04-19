@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="{{ lang|default('nl') }}" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}OpenBoek{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="h-full bg-gray-950 text-white">
+    <div class="flex h-full">
+        {% if user is defined and user %}
+        <!-- Sidebar -->
+        <nav class="hidden md:flex md:w-64 md:flex-col bg-gray-900 border-r border-gray-800">
+            <div class="flex h-16 items-center px-6 border-b border-gray-800">
+                <a href="/dashboard" class="text-xl font-bold text-green-400">📗 OpenBoek</a>
+            </div>
+            <div class="flex-1 overflow-y-auto py-4">
+                <ul class="space-y-1 px-3">
+                    <li>
+                        <a href="/dashboard" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
+                            <span>📊</span> {{ t('nav.dashboard') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/entities" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
+                            <span>🏢</span> {{ t('nav.entities') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/ai" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
+                            <span>🤖</span> {{ t('nav.ai') }}
+                        </a>
+                    </li>
+                    {% if entity is defined and entity %}
+                    <li class="pt-4 pb-2 px-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ entity.name }}</span>
+                    </li>
+                    <li>
+                        <a href="/entities/{{ entity.id }}/accounts" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
+                            <span>📋</span> {{ t('nav.accounting') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/entities/{{ entity.id }}/journal" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
+                            <span>📖</span> Journal
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/entities/{{ entity.id }}/invoices" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
+                            <span>🧾</span> {{ t('nav.invoices') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/entities/{{ entity.id }}/banking" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
+                            <span>🏦</span> {{ t('nav.banking') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/entities/{{ entity.id }}/reports/trial-balance" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
+                            <span>📈</span> {{ t('nav.reports') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/entities/{{ entity.id }}/audit" class="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-800 hover:text-white">
+                            <span>🔍</span> {{ t('nav.audit') }}
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="border-t border-gray-800 p-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-400">{{ user.username }}</span>
+                    <a href="/logout" class="text-sm text-gray-500 hover:text-red-400">{{ t('nav.logout') }}</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile header -->
+        <div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800 h-14 flex items-center justify-between px-4">
+            <a href="/dashboard" class="text-lg font-bold text-green-400">📗 OpenBoek</a>
+            <div class="flex items-center gap-3">
+                <a href="/entities" class="text-gray-400 hover:text-white text-sm">🏢</a>
+                <a href="/logout" class="text-gray-400 hover:text-red-400 text-sm">↪</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Main content -->
+        <main class="flex-1 overflow-y-auto {% if user is defined and user %}md:ml-0 mt-14 md:mt-0{% endif %}">
+            {% if request.query_params.get('success') %}
+            <div class="bg-green-900/50 border border-green-700 text-green-300 px-4 py-3 m-4 rounded-lg">
+                ✅ {{ request.query_params.get('success') }}
+            </div>
+            {% endif %}
+            {% if request.query_params.get('error') %}
+            <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 m-4 rounded-lg">
+                ❌ {{ request.query_params.get('error') }}
+            </div>
+            {% endif %}
+
+            <div class="p-4 md:p-8">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

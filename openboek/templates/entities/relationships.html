@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Relationships — {{ entity.name }} — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">🔗 Relationships: {{ entity.name }}</h1>
+
+    {% if relationships %}
+    <div class="space-y-3 mb-8">
+        {% for rel in relationships %}
+        <div class="bg-gray-900 rounded-lg border border-gray-800 p-4">
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-400">{{ rel.relationship_type.value }}</span>
+                {% if rel.share_percentage %}
+                <span class="text-xs bg-gray-800 px-2 py-1 rounded">{{ rel.share_percentage }}%</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-400 mb-8">No relationships defined yet.</p>
+    {% endif %}
+
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-6">
+        <h2 class="text-lg font-semibold mb-4">Add Relationship</h2>
+        <form method="POST" action="/entities/{{ entity.id }}/relationships" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Related Entity</label>
+                    <select name="related_entity_id"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white">
+                        {% for e in all_entities %}
+                        {% if e.id != entity.id %}
+                        <option value="{{ e.id }}">{{ e.name }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Relationship Type</label>
+                    <select name="relationship_type"
+                        class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white">
+                        {% for rt in relationship_types %}
+                        <option value="{{ rt.value }}">{{ rt.value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                Add Relationship
+            </button>
+        </form>
+    </div>
+
+    <div class="mt-4">
+        <a href="/entities/{{ entity.id }}" class="text-green-400 hover:underline text-sm">← Back to {{ entity.name }}</a>
+    </div>
+</div>
+{% endblock %}

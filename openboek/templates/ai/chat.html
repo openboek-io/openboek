@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('ai.title') }} — OpenBoek{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-6rem)] max-w-5xl mx-auto">
+    <!-- Header with entity selector -->
+    <div class="flex items-center justify-between mb-4 flex-shrink-0">
+        <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold text-green-400">🤖 {{ t('ai.title') }}</h1>
+            <a href="/ai/insights{% if selected_entity_id %}?entity_id={{ selected_entity_id }}{% endif %}"
+               class="text-sm px-3 py-1 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition">
+                💡 {{ t('ai.insights') }}
+            </a>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if not ai_available %}
+            <span class="text-xs px-2 py-1 rounded-full bg-red-900/50 text-red-400 border border-red-800">
+                ⚠️ {{ t('ai.offline') }}
+            </span>
+            {% else %}
+            <span class="text-xs px-2 py-1 rounded-full bg-green-900/50 text-green-400 border border-green-800">
+                ● {{ t('ai.online') }}
+            </span>
+            {% endif %}
+            <select id="entity-select" onchange="switchEntity(this.value)"
+                    class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 focus:ring-green-500 focus:border-green-500">
+                {% for entity in entities %}
+                <option value="{{ entity.id }}" {% if selected_entity_id == entity.id|string %}selected{% endif %}>
+                    {{ entity.name }}
+                </option>
+                {% endfor %}
+                {% if not entities %}
+                <option value="" disabled>{{ t('ai.no_entities') }}</option>
+                {% endif %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Chat messages -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto space-y-4 pb-4 scroll-smooth">
+        {% if not ai_available %}
+        <div class="flex justify-center">
+            <div class="bg-red-900/30 border border-red-800 rounded-lg p-4 max-w-md text-center">
+                <p class="text-red-300 text-sm">{{ t('ai.unavailable_message') }}</p>
+            </div>
+        </div>
+        {% else %}
+        <!-- Welcome message -->
+        <div class="flex gap-3">
+            <div class="w-8 h-8 rounded-full bg-green-900/50 border border-green-700 flex items-center justify-center text-sm flex-shrink-0">
+                🤖
+            </div>
+            <div class="bg-gray-800 border border-gray-700 rounded-lg rounded-tl-none p-4 max-w-[80%]">
+                <p class="text-gray-200 text-sm leading-relaxed">
+                    {{ t('ai.welcome') }}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Suggested questions -->
+    <div id="suggestions" class="flex-shrink-0 mb-3 flex flex-wrap gap-2 {% if not ai_available %}hidden{% endif %}">
+        <button onclick="sendSuggestion(this.textContent)" class="text-xs px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white transition">
+            {{ t('ai.suggest.btw_q1') }}
+        </button>
+        <button onclick="sendSuggestion(this.textContent)" class="text-xs px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white transition">
+            {{ t('ai.suggest.deductions') }}
+        </button>
+        <button onclick="sendSuggestion(this.textContent)" class="text-xs px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white transition">
+            {{ t('ai.suggest.dga') }}
+        </button>
+        <button onclick="sendSuggestion(this.textContent)" class="text-xs px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white transition">
+            {{ t('ai.suggest.trial_balance') }}
+        </button>
+    </div>
+
+    <!-- Input area -->
+    <div class="flex-shrink-0 border-t border-gray-800 pt-3">
+        <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2">
+            <input
+                type="text"
+                id="chat-input"
+                placeholder="{{ t('ai.placeholder') }}"
+                autocomplete="off"
+                class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                {% if not ai_available %}disabled{% endif %}
+            >
+            <button
+                type="submit"
+                id="send-btn"
+                class="bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:text-gray-500 text-white px-6 py-3 rounded-lg font-medium transition"
+                {% if not ai_available %}disabled{% endif %}
+            >
+                {{ t('ai.send') }}
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+const chatMessages = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+const suggestions = document.getElementById('suggestions');
+let conversationHistory = [];
+let isStreaming = false;
+
+function switchEntity(entityId) {
+    window.location.href = '/ai?entity_id=' + entityId;
+}
+
+function sendSuggestion(text) {
+    chatInput.value = text.trim();
+    sendMessage(new Event('submit'));
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function renderMarkdown(text) {
+    // Simple markdown rendering
+    let html = escapeHtml(text);
+    // Bold
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    // Code blocks
+    html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="bg-gray-900 rounded p-2 my-2 text-xs overflow-x-auto"><code>$2</code></pre>');
+    // Inline code
+    html = html.replace(/`(.+?)`/g, '<code class="bg-gray-900 px-1 rounded text-green-400">$1</code>');
+    // Headers
+    html = html.replace(/^### (.+)$/gm, '<h3 class="font-bold text-green-400 mt-3 mb-1">$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2 class="font-bold text-green-300 text-lg mt-3 mb-1">$1</h2>');
+    // Lists
+    html = html.replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>');
+    html = html.replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4 list-decimal">$2</li>');
+    // Risk level badges
+    html = html.replace(/🟢\s*(Veilig|Safe)/g, '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-400 border border-green-800">🟢 $1</span>');
+    html = html.replace(/🟡\s*(Gangbaar|Commonly accepted)/g, '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-900/50 text-yellow-400 border border-yellow-800">🟡 $1</span>');
+    html = html.replace(/🟠\s*(Grijs gebied|Gray area)/g, '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-900/50 text-orange-400 border border-orange-800">🟠 $1</span>');
+    html = html.replace(/🔴\s*(Agressief|Aggressive)/g, '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-900/50 text-red-400 border border-red-800">🔴 $1</span>');
+    // Line breaks
+    html = html.replace(/\n\n/g, '<br><br>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
+function addMessage(role, content) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'flex gap-3' + (role === 'user' ? ' flex-row-reverse' : '');
+
+    const avatar = document.createElement('div');
+    avatar.className = 'w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 ' +
+        (role === 'user' ? 'bg-gray-700 border border-gray-600' : 'bg-green-900/50 border border-green-700');
+    avatar.textContent = role === 'user' ? '👤' : '🤖';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'rounded-lg p-4 max-w-[80%] text-sm leading-relaxed ' +
+        (role === 'user'
+            ? 'bg-gray-700 border border-gray-600 rounded-tr-none text-gray-200'
+            : 'bg-gray-800 border border-gray-700 rounded-tl-none text-gray-200');
+
+    if (role === 'assistant') {
+        bubble.innerHTML = renderMarkdown(content);
+    } else {
+        bubble.textContent = content;
+    }
+
+    wrapper.appendChild(avatar);
+    wrapper.appendChild(bubble);
+    chatMessages.appendChild(wrapper);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return bubble;
+}
+
+async function sendMessage(e) {
+    e.preventDefault();
+    const message = chatInput.value.trim();
+    if (!message || isStreaming) return;
+
+    // Hide suggestions after first message
+    suggestions.classList.add('hidden');
+
+    // Add user message
+    addMessage('user', message);
+    conversationHistory.push({role: 'user', content: message});
+    chatInput.value = '';
+
+    // Add streaming assistant message
+    const bubble = addMessage('assistant', '');
+    bubble.innerHTML = '<span class="text-gray-500">{{ t("ai.thinking") }}</span>';
+
+    isStreaming = true;
+    sendBtn.disabled = true;
+    chatInput.disabled = true;
+
+    const entityId = document.getElementById('entity-select').value;
+    let fullResponse = '';
+
+    try {
+        const response = await fetch('/ai/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                message: message,
+                entity_id: entityId,
+                history: conversationHistory.slice(-20),
+            }),
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, {stream: true});
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') continue;
+                    try {
+                        const parsed = JSON.parse(data);
+                        if (parsed.content) {
+                            fullResponse += parsed.content;
+                            bubble.innerHTML = renderMarkdown(fullResponse);
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
+                    } catch (e) {
+                        // ignore parse errors
+                    }
+                }
+            }
+        }
+
+        conversationHistory.push({role: 'assistant', content: fullResponse});
+    } catch (err) {
+        bubble.innerHTML = '<span class="text-red-400">⚠️ {{ t("ai.error") }}</span>';
+    } finally {
+        isStreaming = false;
+        sendBtn.disabled = false;
+        chatInput.disabled = false;
+        chatInput.focus();
+    }
+}
+
+// Focus input on load
+chatInput.focus();
+</script>
+{% endblock %}

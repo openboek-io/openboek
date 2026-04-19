@@ -1,0 +1,146 @@
+{% extends "wizard/base.html" %}
+{% block title %}{% if lang == 'en' %}Holding Structure{% else %}Holdingstructuur{% endif %} — OpenBoek{% endblock %}
+
+{% block wizard_content %}
+<div class="mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">
+        {% if lang == 'en' %}Do you have a holding company?{% else %}Heb je een holdingmaatschappij?{% endif %}
+    </h1>
+    <p class="text-gray-400">
+        {% if lang == 'en' %}
+        Many BV owners use a holding structure. Let's see if you have one.
+        {% else %}
+        Veel BV-eigenaren gebruiken een holdingstructuur. Laten we kijken of jij er een hebt.
+        {% endif %}
+    </p>
+</div>
+
+<form method="POST" action="/wizard" class="space-y-6">
+    <input type="hidden" name="step" value="holding">
+
+    <!-- Explanation box -->
+    <div class="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+        <h3 class="font-medium text-green-400 mb-3">
+            💡 {% if lang == 'en' %}What is a holding company?{% else %}Wat is een holding?{% endif %}
+        </h3>
+        <p class="text-sm text-gray-300 mb-4">
+            {% if lang == 'en' %}
+            A holding BV is a separate company that <strong>owns your shares</strong> in your operating company (werk-BV). 
+            Instead of owning the operating BV directly, your holding owns it.
+            {% else %}
+            Een holding BV is een aparte vennootschap die <strong>jouw aandelen bezit</strong> in je werkmaatschappij (werk-BV). 
+            In plaats van de werk-BV direct te bezitten, bezit je holding die.
+            {% endif %}
+        </p>
+
+        <!-- Diagram -->
+        <div class="bg-gray-900 rounded-lg p-4 mb-4">
+            <div class="flex flex-col items-center gap-2 text-sm">
+                <div class="bg-gray-800 border border-gray-600 rounded-lg px-4 py-2 text-center">
+                    👤 {{ wizard.display_name or 'You' }}
+                </div>
+                <div class="text-gray-500">↓ {% if lang == 'en' %}owns 100%{% else %}bezit 100%{% endif %}</div>
+                <div class="bg-green-900/30 border border-green-700 rounded-lg px-4 py-2 text-center">
+                    🏢 {% if lang == 'en' %}Holding BV{% else %}Holding BV{% endif %}
+                </div>
+                <div class="text-gray-500">↓ {% if lang == 'en' %}owns 100%{% else %}bezit 100%{% endif %}</div>
+                <div class="bg-blue-900/30 border border-blue-700 rounded-lg px-4 py-2 text-center">
+                    ⚙️ {{ wizard.bv_name or 'Operating BV' }}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-2 text-sm text-gray-400">
+            <p>{% if lang == 'en' %}<strong class="text-gray-300">Why?</strong> Benefits of a holding structure:{% else %}<strong class="text-gray-300">Waarom?</strong> Voordelen van een holdingstructuur:{% endif %}</p>
+            <ul class="list-disc list-inside space-y-1 ml-2">
+                <li>{% if lang == 'en' %}Profits flow up <strong>tax-free</strong> (deelnemingsvrijstelling / participation exemption){% else %}Winst stroomt <strong>belastingvrij</strong> omhoog (deelnemingsvrijstelling){% endif %}</li>
+                <li>{% if lang == 'en' %}Better <strong>asset protection</strong> — if the operating BV fails, the holding's assets are safe{% else %}Betere <strong>vermogensbescherming</strong> — als de werk-BV failliet gaat, is het vermogen in de holding veilig{% endif %}</li>
+                <li>{% if lang == 'en' %}You can <strong>defer dividend</strong> distributions{% else %}Je kunt <strong>dividenduitkeringen uitstellen</strong>{% endif %}</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="bg-gray-900 rounded-xl p-6 border border-gray-800 space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+            <label class="relative cursor-pointer">
+                <input type="radio" name="has_holding" value="yes" class="peer sr-only"
+                       {% if wizard.has_holding %}checked{% endif %}
+                       onchange="document.getElementById('holding-details').classList.remove('hidden')">
+                <div class="flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-gray-700 
+                            peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition">
+                    <span>{% if lang == 'en' %}Yes, I have a holding{% else %}Ja, ik heb een holding{% endif %}</span>
+                </div>
+            </label>
+            <label class="relative cursor-pointer">
+                <input type="radio" name="has_holding" value="no" class="peer sr-only"
+                       {% if not wizard.has_holding %}checked{% endif %}
+                       onchange="document.getElementById('holding-details').classList.add('hidden')">
+                <div class="flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-gray-700 
+                            peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition">
+                    <span>{% if lang == 'en' %}No, just a single BV{% else %}Nee, alleen een enkele BV{% endif %}</span>
+                </div>
+            </label>
+        </div>
+
+        <div id="holding-details" class="space-y-4 {% if not wizard.has_holding %}hidden{% endif %}">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">
+                    {% if lang == 'en' %}Holding BV name{% else %}Naam van de holding BV{% endif %}
+                </label>
+                <input type="text" name="holding_name"
+                       value="{{ wizard.holding_name|default('') }}"
+                       placeholder="{% if lang == 'en' %}e.g. My Name Holding B.V.{% else %}bijv. Mijn Naam Holding B.V.{% endif %}"
+                       class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white 
+                              focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600">
+            </div>
+
+            <div class="border-t border-gray-800 pt-4">
+                <label class="block text-sm font-medium text-gray-300 mb-2">
+                    {% if lang == 'en' %}Does the holding charge a management fee?{% else %}Stuurt de holding een managementfee?{% endif %}
+                </label>
+                <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-3 mb-3">
+                    <p class="text-sm text-gray-400">
+                        💡 {% if lang == 'en' %}
+                        A management fee is what your holding charges the operating BV for your services as director (DGA). 
+                        This is standard practice and tax-efficient.
+                        {% else %}
+                        Een managementfee is wat je holding in rekening brengt bij de werk-BV voor jouw diensten als directeur (DGA). 
+                        Dit is gebruikelijk en fiscaal efficiënt.
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="management_fee" value="yes" class="peer sr-only"
+                               {% if wizard.management_fee %}checked{% endif %}>
+                        <div class="flex items-center justify-center p-3 rounded-lg border-2 border-gray-700 
+                                    peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition">
+                            {% if lang == 'en' %}Yes{% else %}Ja{% endif %}
+                        </div>
+                    </label>
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="management_fee" value="no" class="peer sr-only"
+                               {% if not wizard.management_fee %}checked{% endif %}>
+                        <div class="flex items-center justify-center p-3 rounded-lg border-2 border-gray-700 
+                                    peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition">
+                            {% if lang == 'en' %}No{% else %}Nee{% endif %}
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="flex justify-between">
+        <a href="/wizard?step=business"
+           class="text-gray-400 hover:text-white py-3 px-6 rounded-lg transition flex items-center gap-2">
+            <span>←</span> {% if lang == 'en' %}Back{% else %}Terug{% endif %}
+        </a>
+        <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-8 rounded-lg transition flex items-center gap-2">
+            {% if lang == 'en' %}Next{% else %}Volgende{% endif %} <span>→</span>
+        </button>
+    </div>
+</form>
+{% endblock %}

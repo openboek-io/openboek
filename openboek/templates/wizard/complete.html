@@ -1,0 +1,80 @@
+{% extends "wizard/base.html" %}
+{% block title %}{% if lang == 'en' %}All Set!{% else %}Klaar!{% endif %} — OpenBoek{% endblock %}
+
+{% block wizard_content %}
+<div class="text-center py-8">
+    <div class="text-6xl mb-6">🎉</div>
+    <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">
+        {% if lang == 'en' %}You're all set!{% else %}Je bent helemaal klaar!{% endif %}
+    </h1>
+    <p class="text-lg text-gray-400 max-w-lg mx-auto mb-8">
+        {% if lang == 'en' %}
+        Your administration has been created with the right chart of accounts for your situation. 
+        Here's what to do next:
+        {% else %}
+        Je administratie is aangemaakt met het juiste grootboekschema voor jouw situatie. 
+        Dit zijn de volgende stappen:
+        {% endif %}
+    </p>
+
+    <!-- Next steps -->
+    <div class="max-w-md mx-auto space-y-3 text-left mb-10">
+        <a href="/dashboard" class="flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl transition group">
+            <span class="text-2xl">📊</span>
+            <div>
+                <div class="font-medium text-white group-hover:text-green-400 transition">
+                    {% if lang == 'en' %}Go to your dashboard{% else %}Ga naar je dashboard{% endif %}
+                </div>
+                <div class="text-sm text-gray-500">
+                    {% if lang == 'en' %}See your entities and start bookkeeping{% else %}Bekijk je entiteiten en begin met boeken{% endif %}
+                </div>
+            </div>
+            <span class="ml-auto text-gray-600 group-hover:text-green-400">→</span>
+        </a>
+
+        <a href="/dashboard" class="flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl transition group">
+            <span class="text-2xl">📥</span>
+            <div>
+                <div class="font-medium text-white group-hover:text-green-400 transition">
+                    {% if lang == 'en' %}Import bank statements{% else %}Importeer bankafschriften{% endif %}
+                </div>
+                <div class="text-sm text-gray-500">
+                    {% if lang == 'en' %}Upload MT940 or CSV from your bank{% else %}Upload MT940 of CSV van je bank{% endif %}
+                </div>
+            </div>
+            <span class="ml-auto text-gray-600 group-hover:text-green-400">→</span>
+        </a>
+
+        <a href="/dashboard" class="flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl transition group">
+            <span class="text-2xl">📸</span>
+            <div>
+                <div class="font-medium text-white group-hover:text-green-400 transition">
+                    {% if lang == 'en' %}Scan your first receipt{% else %}Scan je eerste bonnetje{% endif %}
+                </div>
+                <div class="text-sm text-gray-500">
+                    {% if lang == 'en' %}Take a photo — AI reads it for you{% else %}Maak een foto — AI leest het voor je{% endif %}
+                </div>
+            </div>
+            <span class="ml-auto text-gray-600 group-hover:text-green-400">→</span>
+        </a>
+
+        <a href="/dashboard" class="flex items-center gap-4 p-4 bg-gray-900 hover:bg-gray-800 border border-gray-800 rounded-xl transition group">
+            <span class="text-2xl">🧾</span>
+            <div>
+                <div class="font-medium text-white group-hover:text-green-400 transition">
+                    {% if lang == 'en' %}Create your first invoice{% else %}Maak je eerste factuur{% endif %}
+                </div>
+                <div class="text-sm text-gray-500">
+                    {% if lang == 'en' %}Professional invoices in seconds{% else %}Professionele facturen in seconden{% endif %}
+                </div>
+            </div>
+            <span class="ml-auto text-gray-600 group-hover:text-green-400">→</span>
+        </a>
+    </div>
+
+    <a href="/dashboard"
+       class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-lg transition text-lg">
+        {% if lang == 'en' %}Let's start!{% else %}Laten we beginnen!{% endif %} 🚀
+    </a>
+</div>
+{% endblock %}

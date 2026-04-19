@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Banking — {{ entity.name }} — OpenBoek{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold">🏦 {{ t('nav.banking') }}</h1>
+        <div class="flex gap-2">
+            <a href="/entities/{{ entity.id }}/banking/import"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                📥 Import MT940
+            </a>
+            <a href="/entities/{{ entity.id }}/banking/reconcile"
+                class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                🔗 Reconcile
+            </a>
+        </div>
+    </div>
+
+    <!-- Bank Accounts -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold mb-4">Bank Accounts</h2>
+        {% if bank_accounts %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for acc in bank_accounts %}
+            <div class="bg-gray-900 rounded-lg border border-gray-800 p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-medium">{{ acc.name }}</p>
+                        <p class="text-sm text-gray-400 font-mono">{{ acc.iban }}</p>
+                    </div>
+                    <p class="text-lg font-mono {% if acc.current_balance >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        €{{ "{:,.2f}".format(acc.current_balance) }}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-400">No bank accounts linked yet.</p>
+        {% endif %}
+
+        <!-- Add Bank Account -->
+        <div class="mt-4 bg-gray-900 rounded-lg border border-gray-800 p-4">
+            <form method="POST" action="/entities/{{ entity.id }}/banking/accounts" class="flex flex-wrap gap-3 items-end">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Name</label>
+                    <input type="text" name="name" required placeholder="ING Zakelijk"
+                        class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">IBAN</label>
+                    <input type="text" name="iban" required placeholder="NL00INGB0000000000"
+                        class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Opening Balance</label>
+                    <input type="number" name="opening_balance" step="0.01" value="0.00"
+                        class="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm text-white w-28">
+                </div>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm transition">
+                    + Add
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <h2 class="text-lg font-semibold mb-4">Recent Transactions</h2>
+    {% if transactions %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-800 bg-gray-900/50">
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Date</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Counterparty</th>
+                    <th class="text-left px-4 py-3 text-gray-400 font-medium">Description</th>
+                    <th class="text-right px-4 py-3 text-gray-400 font-medium">Amount</th>
+                    <th class="text-center px-4 py-3 text-gray-400 font-medium">Matched</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800">
+                {% for tx in transactions %}
+                <tr class="hover:bg-gray-800/50">
+                    <td class="px-4 py-2 font-mono text-gray-300">{{ tx.date }}</td>
+                    <td class="px-4 py-2">{{ tx.counterparty_name or '—' }}</td>
+                    <td class="px-4 py-2 text-gray-400 truncate max-w-xs">{{ tx.description or '—' }}</td>
+                    <td class="px-4 py-2 text-right font-mono {% if tx.amount >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        €{{ "{:,.2f}".format(tx.amount) }}
+                    </td>
+                    <td class="px-4 py-2 text-center">
+                        {% if tx.matched_entry_id %}
+                        <span class="text-green-400">✓</span>
+                        {% else %}
+                        <span class="text-yellow-400">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center">
+        <p class="text-gray-400">No transactions imported yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

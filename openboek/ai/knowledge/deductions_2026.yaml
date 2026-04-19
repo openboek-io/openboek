@@ -1,0 +1,96 @@
+# Dutch Tax Deductions 2026
+# Source: Belastingdienst
+
+ondernemersaftrek:
+  zelfstandigenaftrek:
+    amount: 2470
+    hours_requirement: 1225
+    legal_basis: "Art. 3.76 Wet IB 2001"
+    risk_level: safe
+    description_nl: "Zelfstandigenaftrek: €2.470 bij ≥1.225 uur per jaar"
+    description_en: "Self-employment deduction: €2,470 if ≥1,225 hours/year"
+
+  startersaftrek:
+    amount: 2123
+    max_years: 3
+    requires: zelfstandigenaftrek
+    legal_basis: "Art. 3.76 lid 3 Wet IB 2001"
+    risk_level: safe
+    description_nl: "Startersaftrek: €2.123 extra bovenop zelfstandigenaftrek (max 3x in 5 jaar)"
+    description_en: "Starter's deduction: €2,123 on top of self-employment deduction (max 3x in 5 years)"
+
+  mkb_winstvrijstelling:
+    rate: 0.1281
+    legal_basis: "Art. 3.79a Wet IB 2001"
+    risk_level: safe
+    description_nl: "MKB-winstvrijstelling: 12,81% van de restwinst na ondernemersaftrek"
+    description_en: "SME profit exemption: 12.81% of remaining profit after entrepreneur deductions"
+
+  for_toevoeging:
+    max_rate: 0.0968
+    max_reserve: 279553
+    legal_basis: "Art. 3.67-3.69 Wet IB 2001"
+    risk_level: safe
+    description_nl: "Fiscale Oudedagsreserve (FOR): max 9,68% van de winst, max €279.553 reserve"
+    description_en: "Fiscal Old-Age Reserve: max 9.68% of profit, max €279,553 reserve"
+
+investeringsaftrek:
+  kia:
+    title_nl: "Kleinschaligheidsinvesteringsaftrek (KIA)"
+    title_en: "Small-Scale Investment Deduction (KIA)"
+    legal_basis: "Art. 3.41-3.44 Wet IB 2001"
+    risk_level: safe
+    min_investment: 2801
+    brackets:
+      - min: 2801
+        max: 62824
+        deduction_pct: 0.28
+      - min: 62825
+        max: 117991
+        deduction_amount: 17589
+      - min: 117992
+        max: 377176
+        deduction_formula: "17589 - 7.56% × (investering − 117991)"
+      - min: 377177
+        max: null
+        deduction_amount: 0
+
+  eia:
+    title_nl: "Energie-investeringsaftrek (EIA)"
+    title_en: "Energy Investment Deduction (EIA)"
+    rate: 0.4050
+    min_investment: 2500
+    legal_basis: "Art. 3.42 Wet IB 2001"
+    risk_level: safe
+    description_nl: "EIA: 40,5% extra aftrek op energie-investeringen (EV-laders, zonnepanelen, etc.)"
+    description_en: "EIA: 40.5% extra deduction on energy investments (EV chargers, solar panels, etc.)"
+
+  mia:
+    title_nl: "Milieu-investeringsaftrek (MIA)"
+    title_en: "Environmental Investment Deduction (MIA)"
+    levels:
+      - level: 1
+        rate: 0.45
+      - level: 2
+        rate: 0.36
+      - level: 3
+        rate: 0.27
+    legal_basis: "Art. 3.42a Wet IB 2001"
+    risk_level: safe
+
+  vamil:
+    title_nl: "Willekeurige afschrijving milieu-investeringen (VAMIL)"
+    title_en: "Arbitrary Depreciation Environmental Investments (VAMIL)"
+    max_rate: 0.75
+    legal_basis: "Art. 3.31 Wet IB 2001"
+    risk_level: safe
+    description_nl: "VAMIL: tot 75% willekeurig afschrijven in het eerste jaar"
+    description_en: "VAMIL: up to 75% arbitrary depreciation in the first year"
+
+werkruimte:
+  thuis:
+    description_nl: "Werkruimte thuis: aftrekbaar als zelfstandige gedeelte van de woning"
+    description_en: "Home office: deductible as independent part of the dwelling"
+    risk_level: commonly_accepted
+    conditions_nl: "Minimaal 70% zakelijk gebruik, eigen ingang of zelfstandig gedeelte"
+    conditions_en: "Minimum 70% business use, separate entrance or independent section"

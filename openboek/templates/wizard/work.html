@@ -1,0 +1,95 @@
+{% extends "wizard/base.html" %}
+{% block title %}{% if lang == 'en' %}Work Situation{% else %}Werksituatie{% endif %} — OpenBoek{% endblock %}
+
+{% block wizard_content %}
+<div class="mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">
+        {% if lang == 'en' %}How do you work?{% else %}Hoe werk je?{% endif %}
+    </h1>
+    <p class="text-gray-400">
+        {% if lang == 'en' %}
+        Select everything that applies. This determines what entities and accounts we'll create.
+        {% else %}
+        Selecteer alles wat van toepassing is. Dit bepaalt welke entiteiten en rekeningen we aanmaken.
+        {% endif %}
+    </p>
+</div>
+
+<form method="POST" action="/wizard" class="space-y-6">
+    <input type="hidden" name="step" value="work">
+
+    <div class="bg-gray-900 rounded-xl p-6 border border-gray-800 space-y-3">
+        <label class="block text-sm font-medium text-gray-300 mb-3">
+            {% if lang == 'en' %}Your work situation{% else %}Jouw werksituatie{% endif %}
+        </label>
+
+        {% set work_options = [
+            ("employed", "💼", "In loondienst", "Employed", "Je werkt als werknemer bij een werkgever.", "You work as an employee for an employer."),
+            ("zzp", "🔧", "ZZP / Freelancer", "Freelancer / ZZP", "Je werkt als zelfstandige zonder personeel. Je stuurt facturen en doet BTW-aangifte.", "You work as a self-employed professional. You send invoices and file VAT returns."),
+            ("bv", "🏢", "BV (directeur-grootaandeelhouder)", "BV (director-major shareholder)", "Je hebt een besloten vennootschap en bent DGA.", "You have a private limited company and are its director/shareholder."),
+            ("multiple", "📊", "Combinatie / Meerdere", "Combination / Multiple", "Je hebt meerdere rollen, bijv. loondienst + ZZP.", "You have multiple roles, e.g. employed + freelance.")
+        ] %}
+
+        {% for value, icon, label_nl, label_en, desc_nl, desc_en in work_options %}
+        <label class="relative cursor-pointer block">
+            <input type="checkbox" name="work_situation" value="{{ value }}" class="peer sr-only"
+                   {% if value in (wizard.work_situation or []) %}checked{% endif %}>
+            <div class="flex items-start gap-4 p-4 rounded-lg border-2 border-gray-700 
+                        peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition">
+                <span class="text-2xl mt-0.5">{{ icon }}</span>
+                <div>
+                    <div class="font-medium text-white">
+                        {% if lang == 'en' %}{{ label_en }}{% else %}{{ label_nl }}{% endif %}
+                    </div>
+                    <div class="text-sm text-gray-400 mt-1">
+                        {% if lang == 'en' %}{{ desc_en }}{% else %}{{ desc_nl }}{% endif %}
+                    </div>
+                </div>
+            </div>
+        </label>
+        {% endfor %}
+    </div>
+
+    {% if wizard.has_partner %}
+    <div class="bg-gray-900 rounded-xl p-6 border border-gray-800 space-y-3">
+        <label class="block text-sm font-medium text-gray-300 mb-3">
+            {% if lang == 'en' %}{{ wizard.partner_name or "Your partner" }}'s work situation{% else %}Werksituatie van {{ wizard.partner_name or "je partner" }}{% endif %}
+        </label>
+
+        {% set partner_options = [
+            ("employed", "💼", "In loondienst", "Employed"),
+            ("zzp", "🔧", "ZZP / Freelancer", "Freelancer / ZZP"),
+            ("bv", "🏢", "BV (DGA)", "BV (Director)"),
+            ("retired", "🏖️", "Gepensioneerd / AOW", "Retired"),
+            ("none", "—", "Geen eigen inkomen", "No own income")
+        ] %}
+
+        {% for value, icon, label_nl, label_en in partner_options %}
+        <label class="relative cursor-pointer block">
+            <input type="checkbox" name="partner_work_situation" value="{{ value }}" class="peer sr-only"
+                   {% if value in (wizard.partner_work_situation or []) %}checked{% endif %}>
+            <div class="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-700 
+                        peer-checked:border-green-500 peer-checked:bg-green-500/10 hover:border-gray-600 transition">
+                <span class="text-xl">{{ icon }}</span>
+                <span class="font-medium text-white">
+                    {% if lang == 'en' %}{{ label_en }}{% else %}{{ label_nl }}{% endif %}
+                </span>
+            </div>
+        </label>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Navigation -->
+    <div class="flex justify-between">
+        <a href="/wizard?step=personal"
+           class="text-gray-400 hover:text-white py-3 px-6 rounded-lg transition flex items-center gap-2">
+            <span>←</span> {% if lang == 'en' %}Back{% else %}Terug{% endif %}
+        </a>
+        <button type="submit"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-8 rounded-lg transition flex items-center gap-2">
+            {% if lang == 'en' %}Next{% else %}Volgende{% endif %} <span>→</span>
+        </button>
+    </div>
+</form>
+{% endblock %}

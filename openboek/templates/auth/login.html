@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Login — OpenBoek{% endblock %}
+{% block content %}
+<div class="min-h-screen flex items-center justify-center">
+    <div class="bg-gray-900 rounded-xl p-8 w-full max-w-md border border-gray-800">
+        <h1 class="text-2xl font-bold text-green-400 mb-2">📗 OpenBoek</h1>
+        <p class="text-gray-400 mb-6">{{ t('nav.dashboard') }}</p>
+
+        {% if error %}
+        <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg mb-4">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/login" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                <input type="text" name="username" required autofocus
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                <input type="password" name="password" required
+                    class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            </div>
+            <button type="submit"
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                Login
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
