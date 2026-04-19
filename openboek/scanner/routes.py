@@ -163,8 +163,7 @@ async def scanner_ocr_status(
         )
         accounts = list(accounts_result.scalars().all())
 
-        return _templates().TemplateResponse("scanner/review.html", {
-            "request": request,
+        return _templates().TemplateResponse(request, "scanner/review.html", {
             "entity": entity,
             "user": user,
             "lang": user.preferred_lang,
@@ -175,8 +174,7 @@ async def scanner_ocr_status(
         })
     elif row.ocr_status == "failed":
         ocr_result = json.loads(row.ocr_result) if row.ocr_result else {}
-        return _templates().TemplateResponse("scanner/review.html", {
-            "request": request,
+        return _templates().TemplateResponse(request, "scanner/review.html", {
             "entity": entity,
             "user": user,
             "lang": user.preferred_lang,
@@ -187,8 +185,7 @@ async def scanner_ocr_status(
         })
     else:
         # Still processing — return partial for HTMX polling
-        return _templates().TemplateResponse("scanner/processing.html", {
-            "request": request,
+        return _templates().TemplateResponse(request, "scanner/processing.html", {
             "entity": entity,
             "user": user,
             "lang": user.preferred_lang,
