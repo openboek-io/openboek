@@ -229,7 +229,7 @@ async def view_entity(
     recent_result = await session.execute(
         select(JournalEntry)
         .where(JournalEntry.entity_id == entity.id)
-        .order_by(JournalEntry.date.desc(), JournalEntry.created_at.desc())
+        .order_by(JournalEntry.date.desc())
         .limit(8)
     )
     recent_entries = list(recent_result.scalars().all())

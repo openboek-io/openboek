@@ -133,7 +133,7 @@ async def dashboard(
             select(JournalEntry, Entity.name.label("entity_name"))
             .join(Entity, Entity.id == JournalEntry.entity_id)
             .where(JournalEntry.entity_id.in_(entity_ids))
-            .order_by(JournalEntry.date.desc(), JournalEntry.created_at.desc())
+            .order_by(JournalEntry.date.desc())
             .limit(8)
         )
         for row in recent_q:
